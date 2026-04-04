@@ -191,7 +191,7 @@
         .risk-vermelho { background: #ff3e3e; box-shadow: 0 0 6px #ff3e3e; }
         .signal-icon { display: inline-block; width: 16px; height: 16px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
 
-        /* ===== NOVAS MELHORIAS (5 ITENS) ===== */
+        /* ===== NOVAS MELHORIAS ===== */
         .table-loading { text-align: center; padding: 30px; color: var(--text); font-size: 13px; }
         .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid var(--accent); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 10px; vertical-align: middle; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -206,6 +206,56 @@
         .regime-badge.baixo { background: rgba(0,255,136,0.15); color: #00ff88; border: 1px solid #00ff88; }
         .regime-badge.medio { background: rgba(255,204,0,0.15); color: #ffcc00; border: 1px solid #ffcc00; }
         .regime-badge.alto { background: rgba(255,62,62,0.15); color: #ff3e3e; border: 1px solid #ff3e3e; }
+        
+        /* AUTO-UPDATE INDICATORS */
+        .auto-update-info { 
+            background: #1e2a38; 
+            padding: 10px 15px; 
+            border-radius: 20px; 
+            margin: 15px 0; 
+            border: 1px solid var(--accent);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .update-time { 
+            font-size: 11px; 
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .update-time span {
+            color: var(--green);
+            font-weight: bold;
+        }
+        .countdown {
+            font-size: 12px;
+            color: var(--gold);
+            font-weight: bold;
+        }
+        .interval-selector {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        .interval-btn {
+            background: #21262d;
+            border: 1px solid #30363d;
+            color: var(--text);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .interval-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
     </style>
 </head>
 <body>
@@ -288,6 +338,9 @@
                 <a href="https://pepinometro-620634786284.southamerica-east1.run.app" class="project-btn" target="_blank">Pepinômetro</a>
                 <a href="https://historia-copas-620634786284.southamerica-east1.run.app" class="project-btn" target="_blank">História Copas</a>
                 <a href="https://investopcao.culturabuilder.com" class="project-btn" target="_blank">InvestOpção</a>
+                <a href="https://marcoscleber10.github.io/centralweb/" class="project-btn" target="_blank">Central Web</a>
+                <a href="https://marcoscleber10.github.io/hub/" class="project-btn" target="_blank">Hub Empréstimo</a>
+                <a href="https://www.yldlab.xyz/" class="project-btn" target="_blank">Pool Yldlab</a>
                 <button class="project-btn" onclick="openPoolsModal()" style="background: var(--purple); color: white;">🌊 Dados de Mercado</button>
             </div>
         </div>
@@ -363,7 +416,7 @@
         <div class="donation-item" style="border-left-color:#f7931a;"><strong>₿ Bitcoin</strong><p>bc1q3zf09xtensa5kag3nz6jsvqyle3sgnmns0j9n5 <button class="copy-btn" onclick="copyText('bc1q3zf09xtensa5kag3nz6jsvqyle3sgnmns0j9n5')">Copiar</button></p></div>
         <div class="donation-item" style="border-left-color:#627eea;"><strong>🔷 EVM</strong><p>0xAd944bA180610F1Fe43151eD81c0084C918c68e1 <button class="copy-btn" onclick="copyText('0xAd944bA180610F1Fe43151eD81c0084C918c68e1')">Copiar</button></p></div>
         <div class="donation-item" style="border-left-color:#14f195;"><strong>◎ Solana</strong><p>EtSD7W7YG36ZuMAAX6bwJYJ9keciRK7cP7rJiadiZdmm <button class="copy-btn" onclick="copyText('EtSD7W7YG36ZuMAAX6bwJYJ9keciRK7cP7rJiadiZdmm')">Copiar</button></p></div>
-        <div class="donation-item" style="border-left-color:#32bcad;"><strong>🇧🇷 Pix</strong><p>127d59fc-1f37-4e8e-9fd4-295e1883727b <button class="copy-btn" onclick="copyText('127d59fc-1f37-4e8e-9fd4-295e1883727b')">Copiar</button></p></div>
+        <div class="donation-item" style="border-left-color:#32bcad;"><strong>🇧 Pix</strong><p>127d59fc-1f37-4e8e-9fd4-295e1883727b <button class="copy-btn" onclick="copyText('127d59fc-1f37-4e8e-9fd4-295e1883727b')">Copiar</button></p></div>
         <div class="button-group"><button class="close-btn" onclick="fecharModal('donationModal')">Fechar</button></div></div></div>
 
     <!-- SUBMODAIS DAS ESTRATÉGIAS -->
@@ -401,6 +454,24 @@
 
             <!-- ABA TOP POOLS -->
             <div id="poolsTab" class="tab-content active">
+                <!-- AUTO-UPDATE INFO -->
+                <div class="auto-update-info">
+                    <div class="update-time">
+                        <span>🕐 Última atualização:</span>
+                        <span id="lastUpdateTime">--:--:--</span>
+                    </div>
+                    <div class="countdown">
+                        Próxima em: <span id="countdownTimer">15:00</span>
+                    </div>
+                    <div class="interval-selector">
+                        <span style="font-size:11px;color:var(--text);">Intervalo:</span>
+                        <button class="interval-btn" onclick="setUpdateInterval(5)">5min</button>
+                        <button class="interval-btn active" onclick="setUpdateInterval(15)">15min</button>
+                        <button class="interval-btn" onclick="setUpdateInterval(30)">30min</button>
+                        <button class="interval-btn" onclick="setUpdateInterval(60)">1h</button>
+                    </div>
+                </div>
+                
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
                     <input type="text" id="searchPairInput" class="search-pair-input" style="flex:1;" placeholder="🔍 Buscar par (ex: WBTC, SOL, ETH, BRL)..." onkeyup="filtrarPorPar()">
                     <button class="btn-atualizar" onclick="atualizarPoolsCompleto()" style="margin:0;">🔄 Atualizar</button>
@@ -570,21 +641,28 @@
         let lastValidPrice = { GOLD: null, SILVER: null, WTI: null };
         let mvrvData = { total: 1.29, sth: 0.83, lth: 1.29, regime: 'ACUMULAÇÃO', recomendacao: 'STH MVRV abaixo de 1 = capitulação. Zona de compra agressiva.' };
         
+        // AUTO-UPDATE VARIABLES
+        let autoUpdateInterval = 15; // minutes (default)
+        let autoUpdateTimer = null;
+        let countdownTimer = null;
+        let lastUpdateTime = null;
+        let nextUpdateTime = null;
+        
         // POOLS SEPARADAS POR CATEGORIA (SEM REPETIÇÃO)
         const poolsBlueChip = [
-            { pool: "USDT/USDC", network: "Solana", dex: "Raydium Concentrated", tvl: "1.3M", ratio: "55/45", volume: "7.8M", apr: "487.3%", fee: "0.25%", age: "2m" },
             { pool: "USD1/WBNB", network: "Bsc", dex: "PancakeSwap V3", tvl: "20.6K", ratio: "16/84", volume: "2.21M", apr: "390.6%", fee: "0.05%", age: "1m" },
             { pool: "SOL/USDC", network: "Base", dex: "Aerodrome Slipstream", tvl: "220.3K", ratio: "59/41", volume: "4.73M", apr: "274.1%", fee: "0.03%", age: "40m" },
             { pool: "WETH/USDC", network: "Base", dex: "Aerodrome Slipstream", tvl: "387.2K", ratio: "75/27", volume: "3.12M", apr: "173.6%", fee: "0.06%", age: "1m" },
-            { pool: "WBTC/WETH", network: "Ethereum", dex: "Uniswap V3", tvl: "231.6K", ratio: "46/54", volume: "1.33M", apr: "15.2%", fee: "0.30%", age: "2y" }
+            { pool: "WBTC/WETH", network: "Ethereum", dex: "Uniswap V3", tvl: "231.6K", ratio: "46/54", volume: "1.33M", apr: "15.2%", fee: "0.30%", age: "2y" },
+            { pool: "WBTC/USDC", network: "Arbitrum", dex: "Uniswap V3", tvl: "8.08M", ratio: "72/28", volume: "11.14M", apr: "8.5%", fee: "0.05%", age: "1y" }
         ];
         
         const poolsStableCoin = [
+            { pool: "USDT/USDC", network: "Solana", dex: "Raydium Concentrated", tvl: "1.3M", ratio: "55/45", volume: "7.8M", apr: "487.3%", fee: "0.25%", age: "2m" },
             { pool: "USDC/USDT", network: "Ethereum", dex: "Uniswap V3", tvl: "100M", ratio: "50/50", volume: "500M", apr: "21.1%", fee: "0.01%", age: "1y" },
             { pool: "DAI/USDC", network: "Arbitrum", dex: "Uniswap V3", tvl: "30M", ratio: "50/50", volume: "80M", apr: "4.3%", fee: "0.01%", age: "6mo" },
             { pool: "EURC/USDC", network: "Solana", dex: "Raydium Concentrated", tvl: "50M", ratio: "50/50", volume: "100M", apr: "29.9%", fee: "0.05%", age: "3mo" },
-            { pool: "USDe/USDC", network: "Ethereum", dex: "Curve", tvl: "20M", ratio: "50/50", volume: "40M", apr: "1.5%", fee: "0.01%", age: "2mo" },
-            { pool: "USDC/WHYPE", network: "Hyperliquid", dex: "Project X", tvl: "510.4K", ratio: "44/56", volume: "1.14M", apr: "244.5%", fee: "0.30%", age: "6mo" }
+            { pool: "USDe/USDC", network: "Ethereum", dex: "Curve", tvl: "20M", ratio: "50/50", volume: "40M", apr: "1.5%", fee: "0.01%", age: "2mo" }
         ];
         
         const poolsRWA = [
@@ -632,6 +710,66 @@
         let searchTerm = '';
         let modoLiquidity = 'auto';
         let carteiraManual = {};
+        
+        // ========== AUTO-UPDATE FUNCTIONS ==========
+        function setUpdateInterval(minutes) {
+            autoUpdateInterval = minutes;
+            // Update active button
+            document.querySelectorAll('.interval-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if(btn.textContent.includes(minutes === 60 ? '1h' : minutes + 'min')) {
+                    btn.classList.add('active');
+                }
+            });
+            // Restart timers
+            startAutoUpdate();
+        }
+        
+        function updateLastUpdateTime() {
+            const now = new Date();
+            lastUpdateTime = now;
+            nextUpdateTime = new Date(now.getTime() + autoUpdateInterval * 60000);
+            
+            const timeStr = now.toLocaleTimeString('pt-BR');
+            document.getElementById('lastUpdateTime').textContent = timeStr;
+        }
+        
+        function updateCountdown() {
+            if(!nextUpdateTime) return;
+            
+            const now = new Date();
+            const diff = nextUpdateTime - now;
+            
+            if(diff <= 0) {
+                // Time to update!
+                atualizarPoolsCompleto();
+                updateLastUpdateTime();
+                return;
+            }
+            
+            const minutes = Math.floor(diff / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+            const countdownStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('countdownTimer').textContent = countdownStr;
+        }
+        
+        function startAutoUpdate() {
+            // Clear existing timers
+            if(autoUpdateTimer) clearInterval(autoUpdateTimer);
+            if(countdownTimer) clearInterval(countdownTimer);
+            
+            // Update immediately on start
+            updateLastUpdateTime();
+            
+            // Start countdown timer (updates every second)
+            countdownTimer = setInterval(updateCountdown, 1000);
+            
+            // Start auto-update timer
+            autoUpdateTimer = setInterval(() => {
+                atualizarPoolsCompleto();
+                updateLastUpdateTime();
+            }, autoUpdateInterval * 60000);
+        }
         
         // ========== FUNÇÕES AUXILIARES ==========
         function abrirSubmodal(id) { document.getElementById(id).style.display = 'flex'; }
@@ -1191,7 +1329,7 @@
             const hora = new Date().getHours(), minutos = new Date().getMinutes(), horaMin = hora + minutos/60;
             let sessao = 'Fora do horário';
             if (horaMin >= 21 || horaMin < 1) sessao = '🌏 Ásia';
-            else if (horaMin >= 4 && horaMin < 9) sessao = '🇪🇺 Londres';
+            else if (horaMin >= 4 && horaMin < 9) sessao = '🇪 Londres';
             else if (horaMin >= 10 && horaMin < 14) sessao = '🇺🇸 NY (Pico)';
             else if (horaMin >= 9.33 && horaMin < 15.5) sessao = '🥇 Metais NY';
             else if (horaMin >= 10 && horaMin < 16.5) sessao = '🛢️ Petróleo';
@@ -1233,8 +1371,8 @@
         
         function openPasswordModal() { const el = document.getElementById('passwordModal'); if(el) el.style.display = 'flex'; }
         function openDonationModal() { const el = document.getElementById('donationModal'); if(el) el.style.display = 'flex'; }
-        function openPoolsModal() { const el = document.getElementById('poolsModal'); if(el) { el.style.display = 'flex'; refreshCategories(); setModo('apr'); renderPoolsEstrategicas(); } }
-        function closePoolsModal() { const el = document.getElementById('poolsModal'); if(el) el.style.display = 'none'; }
+        function openPoolsModal() { const el = document.getElementById('poolsModal'); if(el) { el.style.display = 'flex'; refreshCategories(); setModo('apr'); renderPoolsEstrategicas(); startAutoUpdate(); } }
+        function closePoolsModal() { const el = document.getElementById('poolsModal'); if(el) el.style.display = 'none'; if(autoUpdateTimer) clearInterval(autoUpdateTimer); if(countdownTimer) clearInterval(countdownTimer); }
         
         function switchTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(btn=>btn.classList.remove('active'));
@@ -1244,7 +1382,7 @@
             if(idx !== undefined) document.querySelectorAll('.tab-btn')[idx]?.classList.add('active');
             const content = document.getElementById(`${tab}Tab`);
             if(content) content.classList.add('active');
-            if(tab === 'pools') refreshCategories();
+            if(tab === 'pools') { refreshCategories(); startAutoUpdate(); }
             if(tab === 'mvrv') atualizarMVRV();
             if(tab === 'liquidity') { atualizarMVRV(); atualizarAlocacao(); }
             if(tab === 'ciclo') calcularScoreCiclo();
