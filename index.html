@@ -570,33 +570,45 @@
         let lastValidPrice = { GOLD: null, SILVER: null, WTI: null };
         let mvrvData = { total: 1.29, sth: 0.83, lth: 1.29, regime: 'ACUMULAÇÃO', recomendacao: 'STH MVRV abaixo de 1 = capitulação. Zona de compra agressiva.' };
         
-        let poolsData = [
-            { pool: "USDT/USDC", network: "Solana", dex: "Raydium Concentrated", tvl: "1.3K", ratio: "55/45", volume: "7.8K", apr: "487.3%", fee: "0.25%", age: "2m0s" },
-            { pool: "USD1/WBNB", network: "Bsc", dex: "PancakeSwap V3", tvl: "20.6K", ratio: "16/84", volume: "2.21M", apr: "390.6%", fee: "0.05%", age: "1m0s" },
+        // POOLS SEPARADAS POR CATEGORIA (SEM REPETIÇÃO)
+        const poolsBlueChip = [
+            { pool: "USDT/USDC", network: "Solana", dex: "Raydium Concentrated", tvl: "1.3M", ratio: "55/45", volume: "7.8M", apr: "487.3%", fee: "0.25%", age: "2m" },
+            { pool: "USD1/WBNB", network: "Bsc", dex: "PancakeSwap V3", tvl: "20.6K", ratio: "16/84", volume: "2.21M", apr: "390.6%", fee: "0.05%", age: "1m" },
+            { pool: "SOL/USDC", network: "Base", dex: "Aerodrome Slipstream", tvl: "220.3K", ratio: "59/41", volume: "4.73M", apr: "274.1%", fee: "0.03%", age: "40m" },
+            { pool: "WETH/USDC", network: "Base", dex: "Aerodrome Slipstream", tvl: "387.2K", ratio: "75/27", volume: "3.12M", apr: "173.6%", fee: "0.06%", age: "1m" },
+            { pool: "WBTC/WETH", network: "Ethereum", dex: "Uniswap V3", tvl: "231.6K", ratio: "46/54", volume: "1.33M", apr: "15.2%", fee: "0.30%", age: "2y" }
+        ];
+        
+        const poolsStableCoin = [
+            { pool: "USDC/USDT", network: "Ethereum", dex: "Uniswap V3", tvl: "100M", ratio: "50/50", volume: "500M", apr: "21.1%", fee: "0.01%", age: "1y" },
+            { pool: "DAI/USDC", network: "Arbitrum", dex: "Uniswap V3", tvl: "30M", ratio: "50/50", volume: "80M", apr: "4.3%", fee: "0.01%", age: "6mo" },
+            { pool: "EURC/USDC", network: "Solana", dex: "Raydium Concentrated", tvl: "50M", ratio: "50/50", volume: "100M", apr: "29.9%", fee: "0.05%", age: "3mo" },
+            { pool: "USDe/USDC", network: "Ethereum", dex: "Curve", tvl: "20M", ratio: "50/50", volume: "40M", apr: "1.5%", fee: "0.01%", age: "2mo" },
+            { pool: "USDC/WHYPE", network: "Hyperliquid", dex: "Project X", tvl: "510.4K", ratio: "44/56", volume: "1.14M", apr: "244.5%", fee: "0.30%", age: "6mo" }
+        ];
+        
+        const poolsRWA = [
             { pool: "COINX/USDC", network: "Solana", dex: "Raydium Concentrated", tvl: "286.8K", ratio: "87/13", volume: "270.7K", apr: "344.5%", fee: "1.00%", age: "2mo" },
             { pool: "SLVON/WETH", network: "Ethereum", dex: "Uniswap V3", tvl: "3.5K", ratio: "91/9", volume: "9.5K", apr: "300.1%", fee: "0.30%", age: "1mo" },
-            { pool: "SOL/USDC", network: "Base", dex: "Aerodrome Slipstream", tvl: "220.3K", ratio: "59/41", volume: "4.73M", apr: "274.1%", fee: "0.03%", age: "40m" },
             { pool: "TQQQx/USDC", network: "Solana", dex: "Raydium Concentrated", tvl: "2.6K", ratio: "51/49", volume: "458", apr: "259.6%", fee: "4.00%", age: "17d" },
-            { pool: "USDC/WHYPE", network: "Hyperliquid", dex: "Project X", tvl: "510.4K", ratio: "44/56", volume: "1.14M", apr: "244.5%", fee: "0.30%", age: "6mo" },
-            { pool: "HYPE/USDC", network: "Solana", dex: "Orca Whirlpool", tvl: "80.8K", ratio: "55/45", volume: "76.5K", apr: "224.7%", fee: "0.65%", age: "3mo" },
-            { pool: "HYPE/cbBTC", network: "Solana", dex: "Meteora DLMM", tvl: "21.5K", ratio: "80/20", volume: "63.7K", apr: "216.6%", fee: "0.20%", age: "5mo" },
-            { pool: "SOL/WETH", network: "Arbitrum", dex: "Uniswap V3", tvl: "121.8K", ratio: "63/37", volume: "213.1K", apr: "191.7%", fee: "0.30%", age: "2y" },
-            { pool: "HYPE/SOL", network: "Solana", dex: "Meteora DLMM", tvl: "41.0K", ratio: "39/61", volume: "199.3K", apr: "177.3%", fee: "0.10%", age: "5mo" },
-            { pool: "WETH/USDC", network: "Base", dex: "Aerodrome Slipstream", tvl: "387.2K", ratio: "75/27", volume: "3.12M", apr: "173.6%", fee: "0.06%", age: "1m" },
             { pool: "SLVON/USDC", network: "Ethereum", dex: "Uniswap V3", tvl: "161.3K", ratio: "79/21", volume: "247.6K", apr: "168.1%", fee: "0.30%", age: "2y" },
-            { pool: "HOODX/SOL", network: "Solana", dex: "Raydium Concentrated", tvl: "437.2K", ratio: "35/65", volume: "190.3K", apr: "158.8%", fee: "1.00%", age: "8mo" },
-            { pool: "SOL/WBTC", network: "Arbitrum", dex: "Uniswap V3", tvl: "10.5K", ratio: "79/21", volume: "4.5K", apr: "157.6%", fee: "1.00%", age: "2y" },
-            { pool: "WBTC/WETH", network: "Ethereum", dex: "Uniswap V3", tvl: "231.6K", ratio: "46/54", volume: "1.33M", apr: "15.2%", fee: "0.30%", age: "2y" },
-            { pool: "WBTC/USDC", network: "Arbitrum", dex: "Uniswap V3", tvl: "8.08M", ratio: "72/28", volume: "11.14M", apr: "8.5%", fee: "0.05%", age: "1y" },
-            { pool: "EURC/USDC", network: "Solana", dex: "Raydium Concentrated", tvl: "50K", ratio: "50/50", volume: "100K", apr: "29.9%", fee: "0.05%", age: "3mo" },
-            { pool: "USDC/USDT", network: "Ethereum", dex: "Uniswap V3", tvl: "100K", ratio: "50/50", volume: "500K", apr: "21.1%", fee: "0.01%", age: "1y" },
-            { pool: "DAI/USDC", network: "Arbitrum", dex: "Uniswap V3", tvl: "30K", ratio: "50/50", volume: "80K", apr: "4.3%", fee: "0.01%", age: "6mo" },
-            { pool: "USDe/USDC", network: "Ethereum", dex: "Curve", tvl: "20K", ratio: "50/50", volume: "40K", apr: "1.5%", fee: "0.01%", age: "2mo" },
-            { pool: "BRZ/USDC", network: "Polygon", dex: "QuickSwap", tvl: "25K", ratio: "60/40", volume: "50K", apr: "8.10%", fee: "0.25%", age: "1y" },
-            { pool: "BRL/AUSD", network: "Arbitrum", dex: "Camelot", tvl: "10K", ratio: "70/30", volume: "20K", apr: "12.25%", fee: "0.30%", age: "8mo" },
+            { pool: "HOODX/SOL", network: "Solana", dex: "Raydium Concentrated", tvl: "437.2K", ratio: "35/65", volume: "190.3K", apr: "158.8%", fee: "1.00%", age: "8mo" }
+        ];
+        
+        const poolsReal = [
             { pool: "BRL/USDC", network: "Polygon", dex: "QuickSwap", tvl: "40K", ratio: "55/45", volume: "100K", apr: "17.46%", fee: "0.20%", age: "1y" },
             { pool: "BRL/USDT", network: "Bsc", dex: "PancakeSwap V3", tvl: "15K", ratio: "65/35", volume: "30K", apr: "8.44%", fee: "0.25%", age: "10mo" },
+            { pool: "BRL/AUSD", network: "Arbitrum", dex: "Camelot", tvl: "10K", ratio: "70/30", volume: "20K", apr: "12.25%", fee: "0.30%", age: "8mo" },
+            { pool: "BRZ/USDC", network: "Polygon", dex: "QuickSwap", tvl: "25K", ratio: "60/40", volume: "50K", apr: "8.10%", fee: "0.25%", age: "1y" },
             { pool: "BRL/USDT", network: "Ethereum", dex: "Uniswap V3", tvl: "12K", ratio: "60/40", volume: "25K", apr: "13.56%", fee: "0.30%", age: "7mo" }
+        ];
+        
+        // Array completo para a tabela principal (todas as pools sem repetição)
+        let poolsData = [
+            ...poolsBlueChip,
+            ...poolsStableCoin,
+            ...poolsRWA,
+            ...poolsReal
         ];
         
         let poolsEstrategicas = [
@@ -788,7 +800,7 @@
             alert('✅ APRs atualizados com simulação!');
         }
         
-        // ========== FUNÇÕES DA ABA TOP POOLS (COM MELHORIAS) ==========
+        // ========== FUNÇÕES DA ABA TOP POOLS (CORRIGIDAS - SEM REPETIÇÃO) ==========
         function extrairNumeros(pool) {
             const parseNum = (str) => { 
                 if(!str) return 0; 
@@ -808,29 +820,35 @@
             return (aprPerc*0.4)+(volPerc*0.3)+(tvlPerc*0.2);
         }
 
-        function getTopAPRs(pools, n, filterFn = null) {
-            let filtered = filterFn ? pools.filter(filterFn) : [...pools];
-            filtered.sort((a,b) => parseFloat(b.apr) - parseFloat(a.apr));
-            return filtered.slice(0,n).map(p => ({ pair: p.pool, apr: p.apr, risk: getRiskLevel(p) }));
+        function getTopAPRs(pools, n) {
+            // Ordena por APR e retorna os top N
+            const sorted = [...pools].sort((a,b) => parseFloat(b.apr) - parseFloat(a.apr));
+            return sorted.slice(0,n).map(p => ({ pair: p.pool, apr: p.apr, risk: getRiskLevel(p) }));
         }
 
         function refreshCategories() {
             const container = document.getElementById('categoriesContainer');
             if(!container) return;
-            const bluechip = getTopAPRs(poolsData, 5);
-            const stable = getTopAPRs(poolsData, 5, p => p.pool.toUpperCase().includes('USDC') || p.pool.toUpperCase().includes('USDT') || p.pool.toUpperCase().includes('DAI'));
-            const rwa = getTopAPRs(poolsData, 5, p => ['COIN', 'NVDA', 'SLV', 'HOOD', 'TQQQ'].some(k => p.pool.toUpperCase().includes(k)));
-            const real = getTopAPRs(poolsData, 5, p => p.pool.toUpperCase().includes('BRL') || p.pool.toUpperCase().includes('BRZ'));
+            
+            // Pega os top 5 de cada categoria (já estão separadas, sem repetição)
+            const bluechip = getTopAPRs(poolsBlueChip, 5);
+            const stable = getTopAPRs(poolsStableCoin, 5);
+            const rwa = getTopAPRs(poolsRWA, 5);
+            const real = getTopAPRs(poolsReal, 5);
+            
             const categories = [
                 { title: "BEST BLUE-CHIP", items: bluechip },
                 { title: "BEST STABLE COIN", items: stable },
                 { title: "BEST RWA", items: rwa },
                 { title: "BEST REAL", items: real }
             ];
+            
             let html = '';
             for (let cat of categories) {
                 html += `<div class="category-card"><div class="category-title">${cat.title}<span class="risk-dot ${cat.items[0]?.risk.class || 'risk-amarelo'}"></span></div>`;
-                for (let item of cat.items) html += `<div class="category-item"><span class="pair"><span class="risk-dot ${item.risk.class}"></span>${item.pair}</span><span class="apr">${item.apr}</span></div>`;
+                for (let item of cat.items) {
+                    html += `<div class="category-item"><span class="pair"><span class="risk-dot ${item.risk.class}"></span>${item.pair}</span><span class="apr">${item.apr}</span></div>`;
+                }
                 html += `</div>`;
             }
             container.innerHTML = html;
