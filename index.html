@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CryptoNews Pro • Agregador Financeiro</title>
+  <title>CryptoNews Pro • Agregador Financeiro em Tempo Real</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -12,7 +12,22 @@
       darkMode: 'class',
       theme: {
         extend: {
-          animation: { 'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite' }
+          animation: { 
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'slide-in': 'slideIn 0.5s ease-out',
+            'fade-in': 'fadeIn 0.3s ease-out',
+            'spin-slow': 'spin 2s linear infinite'
+          },
+          keyframes: {
+            slideIn: {
+              '0%': { transform: 'translateY(-20px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' }
+            },
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' }
+            }
+          }
         }
       }
     }
@@ -21,7 +36,7 @@
   <!-- Alpine.js -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   
-  <!-- Ícones -->
+  <!-- Ícones Phosphor -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   
   <style>
@@ -29,29 +44,73 @@
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-    .breaking-banner { background: linear-gradient(90deg, #dc2626, #b91c1c, #dc2626); background-size: 200% 100%; animation: gradient 3s ease infinite; }
-    @keyframes gradient { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-    .fade-in { animation: fadeIn 0.3s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .breaking-banner { 
+      background: linear-gradient(90deg, #dc2626, #b91c1c, #ef4444, #dc2626); 
+      background-size: 300% 100%; 
+      animation: gradient 4s ease infinite; 
+    }
+    @keyframes gradient { 
+      0%, 100% { background-position: 0% 50%; } 
+      50% { background-position: 100% 50%; } 
+    }
+    .fade-in { animation: fadeIn 0.3s ease-out forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    
+    /* Toast Animation */
+    .toast-enter { animation: toastIn 0.3s ease-out; }
+    .toast-leave { animation: toastOut 0.3s ease-in forwards; }
+    @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes toastOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+    
+    /* Copy Area */
+    .copy-area { 
+      background: linear-gradient(135deg, #1f2937 0%, #111827 100%); 
+      border: 1px solid #374151; 
+    }
+    
+    /* Price Pulse */
+    .price-up { color: #22c55e; animation: pulse-green 1.5s ease-in-out; }
+    .price-down { color: #ef4444; animation: pulse-red 1.5s ease-in-out; }
+    @keyframes pulse-green { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+    @keyframes pulse-red { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
   </style>
 </head>
 
 <body class="bg-black text-gray-100 font-sans antialiased transition-colors duration-300"
       x-data="cryptoNewsApp()"
       x-init="init()"
-      @keydown.ctrl.k.prevent="showSearch = !showSearch"
-      @keydown.escape="showSearch = false">
+      @keydown.ctrl.r.prevent="refreshManual()"
+      @keydown.f5.prevent="refreshManual()">
 
-  <!-- ================= MODAL: CONFIG API KEYS ================= -->
-  <div x-show="!hasValidKeys" x-cloak class="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4">
-    <div class="bg-gray-900 border border-gray-700 rounded-2xl p-6 max-w-lg w-full shadow-2xl">
+  <!-- ================= TOAST NOTIFICATIONS ================= -->
+  <div class="fixed top-4 right-4 z-[200] space-y-2">
+    <template x-for="toast in toasts" :key="toast.id">
+      <div class="toast-enter flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border"
+           :class="toast.type === 'success' ? 'bg-green-900/90 border-green-700 text-green-100' : 
+                   toast.type === 'error' ? 'bg-red-900/90 border-red-700 text-red-100' : 
+                   'bg-gray-800/90 border-gray-700 text-gray-100'">
+        <i class="ph-bold" :class="toast.type === 'success' ? 'ph-check-circle text-green-400' : 
+                                     toast.type === 'error' ? 'ph-warning-circle text-red-400' : 
+                                     'ph-info text-blue-400'"></i>
+        <span class="text-sm font-medium" x-text="toast.message"></span>
+        <button @click="removeToast(toast.id)" class="ml-2 hover:opacity-70">
+          <i class="ph-bold ph-x"></i>
+        </button>
+      </div>
+    </template>
+  </div>
+
+  <!-- ================= MODAL: CONFIG API ================= -->
+  <div x-show="!hasValidKeys && !demoMode" x-cloak 
+       class="fixed inset-0 z-[150] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-gray-900 border border-gray-700 rounded-2xl p-6 max-w-lg w-full shadow-2xl animate-fade-in">
       <div class="flex items-center gap-3 mb-6">
-        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-lg">
           <i class="ph-bold ph-key text-white text-xl"></i>
         </div>
         <div>
           <h2 class="text-xl font-bold">Configurar APIs</h2>
-          <p class="text-sm text-gray-400">Insira suas chaves para ativar dados reais</p>
+          <p class="text-sm text-gray-400">Opcional: insira keys para dados em tempo real</p>
         </div>
       </div>
       
@@ -59,86 +118,144 @@
         <div>
           <label class="block text-sm font-medium text-gray-300 mb-1">NewsAPI Key</label>
           <input type="password" x-model="apiKeys.newsapi" 
-                 class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                 placeholder="Obtenha em newsapi.org">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-300 mb-1">CryptoPanic Key (opcional)</label>
-          <input type="password" x-model="apiKeys.cryptopanic" 
-                 class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                 placeholder="Obtenha em cryptopanic.com/developers">
+                 class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                 placeholder="Obtenha em newsapi.org • Grátis">
+          <p class="text-xs text-gray-500 mt-1">Sem key? Use o Modo Demo abaixo ↓</p>
         </div>
       </div>
       
       <div class="mt-6 flex gap-3">
-        <button @click="saveKeys()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors">
-          Salvar e Continuar
+        <button @click="saveKeys()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors shadow-lg shadow-blue-500/25">
+          Salvar e Ativar
         </button>
-        <button @click="useDemoMode()" class="px-4 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 transition-colors">
-          Modo Demo
+        <button @click="enableDemoMode()" class="px-5 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-gray-300 transition-colors font-medium">
+          🎭 Modo Demo
         </button>
+      </div>
+      
+      <div class="mt-4 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
+        <p class="text-xs text-gray-400 flex items-start gap-2">
+          <i class="ph-bold ph-shield-check text-green-400 mt-0.5"></i>
+          Suas chaves são armazenadas apenas no seu navegador (localStorage) e nunca enviadas a servidores externos.
+        </p>
       </div>
     </div>
   </div>
 
   <!-- ================= HEADER ================= -->
-  <header class="sticky top-0 z-50 bg-gray-900/95 backdrop-blur-md border-b border-gray-800">
+  <header class="sticky top-0 z-[100] bg-gray-900/95 backdrop-blur-md border-b border-gray-800">
     <div class="max-w-7xl mx-auto px-4 py-3">
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between gap-4">
+        
+        <!-- Logo + Price Ticker -->
         <div class="flex items-center gap-4">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
               <i class="ph-bold ph-trend-up text-white text-xl"></i>
             </div>
             <div>
-              <h1 class="text-xl font-bold tracking-tight">CryptoNews <span class="text-blue-500">Pro</span></h1>
-              <p class="text-[10px] text-gray-500 font-mono uppercase">Tempo Real</p>
+              <h1 class="text-lg sm:text-xl font-bold tracking-tight">CryptoNews <span class="text-blue-500">Pro</span></h1>
+              <p class="text-[10px] text-gray-500 font-mono uppercase flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full" :class="connectionStatus === 'online' ? 'bg-green-500' : connectionStatus === 'updating' ? 'bg-yellow-500 animate-pulse' : 'bg-red-500'"></span>
+                <span x-text="connectionStatus === 'online' ? 'Online' : connectionStatus === 'updating' ? 'Atualizando...' : 'Offline'"></span>
+              </p>
             </div>
           </div>
           
-          <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-800 rounded-full border border-gray-700">
-            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            <span class="text-xs text-gray-300" x-text="`+${stats.total24h} notícias em 24h`"></span>
+          <!-- Live Price Ticker -->
+          <div class="hidden md:flex items-center gap-3 px-3 py-1.5 bg-gray-800/50 rounded-full border border-gray-700">
+            <div class="flex items-center gap-1.5">
+              <i class="ph-fill ph-currency-btc text-yellow-500"></i>
+              <span class="text-sm font-bold" :class="btcChange >= 0 ? 'price-up' : 'price-down'" x-text="`BTC $${btcPrice.toLocaleString('en-US')}`"></span>
+              <span class="text-xs" :class="btcChange >= 0 ? 'text-green-400' : 'text-red-400'" x-text="`${btcChange >= 0 ? '+' : ''}${btcChange.toFixed(2)}%`"></span>
+            </div>
+            <span class="text-gray-600">|</span>
+            <div class="flex items-center gap-1.5">
+              <i class="ph-fill ph-currency-eth text-blue-400"></i>
+              <span class="text-sm font-medium text-gray-300" x-text="`ETH $${ethPrice.toLocaleString('en-US')}`"></span>
+            </div>
           </div>
         </div>
 
-        <div class="flex items-center gap-2">
-          <button @click="showSearch = true" class="hidden sm:flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm text-gray-400 transition-colors">
+        <!-- Actions -->
+        <div class="flex items-center gap-1.5">
+          
+          <!-- Search -->
+          <button @click="showSearch = true" 
+                  class="hidden sm:flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm text-gray-400 transition-colors">
             <i class="ph-bold ph-magnifying-glass"></i>
-            <span>Buscar...</span>
-            <span class="ml-2 px-1.5 py-0.5 bg-gray-700 rounded text-[10px]">Ctrl+K</span>
+            <span class="hidden lg:inline">Buscar...</span>
+            <span class="ml-1 px-1.5 py-0.5 bg-gray-700 rounded text-[10px] text-gray-500">Ctrl+K</span>
           </button>
           
-          <button @click="view = view === 'feed' ? 'headlines' : 'feed'"
-                  class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all"
-                  :class="view === 'headlines' ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/25' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'">
-            <i class="ph-bold" :class="view === 'feed' ? 'ph-newspaper' : 'ph-list-dashes'"></i>
-            <span x-text="view === 'feed' ? 'Painel IA' : 'Feed'"></span>
+          <!-- Manual Refresh -->
+          <button @click="refreshManual()" :disabled="isUpdating"
+                  class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border"
+                  :class="isUpdating ? 'bg-yellow-900/30 border-yellow-700 text-yellow-400 cursor-wait' : 'bg-gray-800 hover:bg-gray-700 border-gray-700 text-gray-300 hover:border-gray-600'">
+            <i class="ph-bold ph-arrows-clockwise" :class="{'animate-spin': isUpdating}"></i>
+            <span class="hidden sm:inline" x-text="isUpdating ? 'Atualizando...' : 'Atualizar'"></span>
           </button>
           
-          <button @click="toggleTheme()" class="w-10 h-10 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-colors">
+          <!-- View Toggle -->
+          <div class="flex items-center bg-gray-800 rounded-lg p-0.5 border border-gray-700">
+            <button @click="view = 'feed'"
+                    class="px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1"
+                    :class="view === 'feed' ? 'bg-blue-600 text-white shadow' : 'text-gray-400 hover:text-gray-200'">
+              <i class="ph-bold ph-newspaper"></i>
+              <span class="hidden sm:inline">Feed</span>
+            </button>
+            <button @click="view = 'trending'"
+                    class="px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1"
+                    :class="view === 'trending' ? 'bg-orange-600 text-white shadow' : 'text-gray-400 hover:text-gray-200'">
+              <i class="ph-bold ph-fire"></i>
+              <span class="hidden sm:inline">Em Alta</span>
+            </button>
+            <button @click="view = 'ai-copy'"
+                    class="px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1"
+                    :class="view === 'ai-copy' ? 'bg-purple-600 text-white shadow' : 'text-gray-400 hover:text-gray-200'">
+              <i class="ph-bold ph-robot"></i>
+              <span class="hidden sm:inline">Copiar p/ IA</span>
+            </button>
+          </div>
+          
+          <!-- Auto-refresh Timer -->
+          <div class="hidden lg:flex items-center gap-1.5 px-3 py-2 text-xs text-gray-500 bg-gray-800/50 rounded-lg border border-gray-700">
+            <i class="ph-bold ph-timer"></i>
+            <span>Próxima: </span>
+            <span class="font-mono text-gray-300" x-text="nextUpdate"></span>
+          </div>
+          
+          <!-- Theme Toggle -->
+          <button @click="toggleTheme()" 
+                  class="w-10 h-10 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-colors border border-gray-700">
             <i class="ph-fill" :class="isDark ? 'ph-moon-stars text-yellow-400' : 'ph-sun text-gray-300'"></i>
           </button>
         </div>
       </div>
 
-      <div x-show="breakingNews" x-transition class="breaking-banner mt-3 rounded-lg px-4 py-2 flex items-center gap-3">
+      <!-- Breaking News Banner -->
+      <div x-show="breakingNews" x-transition:enter="transition ease-out duration-300" 
+           x-transition:enter-start="opacity-0 -translate-y-2" 
+           x-transition:enter-end="opacity-100 translate-y-0"
+           class="breaking-banner mt-3 rounded-xl px-4 py-2.5 flex items-center gap-3 shadow-lg">
         <i class="ph-fill ph-warning-circle text-white text-lg animate-pulse"></i>
-        <span class="text-white font-medium text-sm truncate" x-text="breakingNews"></span>
-        <button @click="breakingNews = null" class="ml-auto text-white/80 hover:text-white">
+        <span class="text-white font-medium text-sm truncate flex-1" x-text="breakingNews"></span>
+        <button @click="breakingNews = null" class="text-white/80 hover:text-white transition">
           <i class="ph-bold ph-x"></i>
         </button>
       </div>
 
-      <div x-show="view === 'feed'" x-transition class="flex gap-2 mt-4 overflow-x-auto scrollbar-hide pb-1">
+      <!-- Category Filters (Feed View) -->
+      <div x-show="view === 'feed'" x-transition 
+           class="flex gap-2 mt-4 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4">
         <template x-for="cat in categories" :key="cat.id">
-          <button @click="filters.category = cat.id"
-                  class="px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border flex items-center gap-1.5"
-                  :class="filters.category === cat.id ? cat.activeClass : 'bg-gray-800 text-gray-400 border-gray-700 hover:border-gray-500'">
+          <button @click="filters.category = cat.id; currentPage = 1"
+                  class="px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all border flex items-center gap-1.5 shadow-sm"
+                  :class="filters.category === cat.id ? cat.activeClass : 'bg-gray-800 text-gray-400 border-gray-700 hover:border-gray-500 hover:bg-gray-750'">
             <span x-text="cat.icon"></span>
             <span x-text="cat.label"></span>
-            <span x-show="cat.count > 0" class="px-1.5 py-0.5 rounded-full text-[10px]" 
-                  :class="filters.category === cat.id ? 'bg-white/20' : 'bg-gray-700'"
+            <span x-show="cat.count > 0 && filters.category !== cat.id" 
+                  class="px-1.5 py-0.5 rounded-full text-[10px] bg-gray-700 text-gray-300"
                   x-text="cat.count"></span>
           </button>
         </template>
@@ -147,32 +264,40 @@
   </header>
 
   <!-- ================= SEARCH OVERLAY ================= -->
-  <div x-show="showSearch" x-cloak class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm" @click.self="showSearch = false">
-    <div class="max-w-2xl mx-auto mt-20 px-4">
-      <div class="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl overflow-hidden">
-        <div class="flex items-center gap-3 px-4 py-3 border-b border-gray-800">
-          <i class="ph-bold ph-magnifying-glass text-gray-400"></i>
-          <input type="text" x-model="filters.search" @input="searchNews()" 
-                 class="flex-1 bg-transparent outline-none text-white placeholder-gray-500"
-                 placeholder="Buscar por Bitcoin, Fed, ETF, Trump..."
+  <div x-show="showSearch" x-cloak 
+       class="fixed inset-0 z-[120] bg-black/85 backdrop-blur-sm" 
+       @click.self="showSearch = false"
+       x-transition:enter="transition ease-out duration-200"
+       x-transition:enter-start="opacity-0"
+       x-transition:enter-end="opacity-100">
+    <div class="max-w-2xl mx-auto mt-24 px-4">
+      <div class="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl overflow-hidden animate-slide-in">
+        <div class="flex items-center gap-3 px-4 py-3 border-b border-gray-800 bg-gray-800/50">
+          <i class="ph-bold ph-magnifying-glass text-gray-400 text-lg"></i>
+          <input type="text" x-model="filters.search" @input.debounce.300ms="searchNews()" 
+                 class="flex-1 bg-transparent outline-none text-white placeholder-gray-500 text-base"
+                 placeholder="Bitcoin, ETF, Fed, Ethereum, regulamentação..."
                  autofocus>
-          <button @click="showSearch = false" class="text-gray-400 hover:text-white">
-            <i class="ph-bold ph-x"></i>
+          <button @click="showSearch = false; filters.search = ''" class="text-gray-400 hover:text-white transition">
+            <i class="ph-bold ph-x text-lg"></i>
           </button>
         </div>
         <div class="p-2 max-h-96 overflow-y-auto">
           <template x-if="searchResults.length > 0">
             <div class="space-y-1">
-              <template x-for="item in searchResults.slice(0, 10)" :key="item.id">
-                <a :href="item.url" target="_blank" 
-                   class="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors group">
-                  <div class="w-16 h-16 rounded bg-gray-800 shrink-0 overflow-hidden">
-                    <img :src="item.image || 'https://placehold.co/100x100/1f2937/6b7280?text=News'" 
-                         class="w-full h-full object-cover" @error="$el.style.display='none'">
+              <template x-for="item in searchResults.slice(0, 12)" :key="item.id">
+                <a :href="item.url" target="_blank" rel="noopener"
+                   class="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-800 transition-colors group">
+                  <div class="w-14 h-14 rounded-lg bg-gray-800 shrink-0 overflow-hidden border border-gray-700">
+                    <img :src="item.image || getDefaultImage(item.category)" 
+                         class="w-full h-full object-cover" 
+                         @error="$el.style.display='none'; $el.parentElement.innerHTML='<i class=\\'ph-bold ph-image text-gray-600 text-lg\\'></i>'">
                   </div>
                   <div class="flex-1 min-w-0">
-                    <h4 class="text-sm font-medium text-gray-100 group-hover:text-blue-400 line-clamp-2" x-text="item.title"></h4>
-                    <div class="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                    <h4 class="text-sm font-medium text-gray-100 group-hover:text-blue-400 transition line-clamp-2" x-text="item.title"></h4>
+                    <div class="flex items-center gap-2 mt-1.5 text-xs text-gray-500">
+                      <span class="px-1.5 py-0.5 rounded text-[10px] font-medium" :class="getCategoryColors(item.category)" x-text="getCategoryLabel(item.category)"></span>
+                      <span>•</span>
                       <span x-text="item.source"></span>
                       <span>•</span>
                       <span x-text="timeAgo(item.date)"></span>
@@ -182,117 +307,155 @@
               </template>
             </div>
           </template>
+          <template x-if="searchResults.length === 0 && filters.search.length >= 3">
+            <div class="text-center py-10 text-gray-500">
+              <i class="ph-duotone ph-magnifying-glass text-4xl mb-3 text-gray-600"></i>
+              <p class="text-sm">Nenhum resultado para "<span class="text-gray-300" x-text="filters.search"></span>"</p>
+              <p class="text-xs mt-1">Tente termos como: Bitcoin, ETF, Fed, regulamentação</p>
+            </div>
+          </template>
+          <template x-if="filters.search.length > 0 && filters.search.length < 3">
+            <div class="text-center py-8 text-gray-500 text-sm">
+              Digite pelo menos 3 caracteres para buscar...
+            </div>
+          </template>
         </div>
       </div>
     </div>
   </div>
 
   <!-- ================= MAIN CONTENT ================= -->
-  <main class="max-w-7xl mx-auto px-4 py-6 min-h-screen">
+  <main class="max-w-7xl mx-auto px-4 py-6 min-h-screen pb-20">
     
-    <div x-show="loading && news.length === 0" class="flex flex-col items-center justify-center py-20">
+    <!-- Loading State -->
+    <div x-show="isUpdating && news.length === 0" class="flex flex-col items-center justify-center py-24">
       <div class="relative">
-        <div class="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+        <div class="w-20 h-20 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
         <div class="absolute inset-0 flex items-center justify-center">
-          <i class="ph-bold ph-arrows-clockwise text-blue-500 animate-pulse"></i>
+          <i class="ph-bold ph-arrows-clockwise text-blue-500 text-xl animate-pulse"></i>
         </div>
       </div>
-      <p class="mt-4 text-gray-400">Sincronizando fontes de notícias...</p>
+      <p class="mt-5 text-gray-300 font-medium">Buscando notícias atualizadas...</p>
+      <p class="text-xs text-gray-500 mt-2 flex items-center gap-1">
+        <i class="ph-bold ph-info"></i>
+        <span x-text="`Fontes: ${activeSources.length} • Cache: ${cacheInfo}`"></span>
+      </p>
     </div>
 
-    <div x-show="error && !loading" class="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm flex items-start gap-3">
+    <!-- Error State -->
+    <div x-show="error && !isUpdating" class="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm flex items-start gap-3 animate-fade-in">
       <i class="ph-bold ph-warning-circle text-lg mt-0.5"></i>
-      <div>
-        <p x-text="error"></p>
-        <button @click="retryFetch()" class="mt-2 text-red-300 hover:text-red-200 text-xs font-medium underline">
-          Tentar novamente
+      <div class="flex-1">
+        <p class="font-medium" x-text="error"></p>
+        <button @click="refreshManual()" class="mt-2 text-red-300 hover:text-red-200 text-xs font-medium underline flex items-center gap-1">
+          <i class="ph-bold ph-arrow-counter-clockwise"></i> Tentar novamente
         </button>
       </div>
     </div>
 
-    <!-- Trending Section -->
-    <div x-show="view === 'feed' && trending.length > 0" class="mb-6">
-      <div class="flex items-center gap-2 mb-3">
-        <i class="ph-fill ph-fire text-orange-500"></i>
-        <h3 class="font-bold text-lg">🔥 Em Alta Agora</h3>
+    <!-- Stats Bar -->
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-gray-800">
+      <div class="flex items-center gap-4">
+        <h2 class="text-lg font-semibold flex items-center gap-2">
+          <span x-show="view === 'feed'">📰</span>
+          <span x-show="view === 'trending'">🔥</span>
+          <span x-show="view === 'ai-copy'">🤖</span>
+          <span x-text="view === 'feed' ? 'Feed de Notícias' : view === 'trending' ? 'Em Alta Agora' : 'Copiar para IA'"></span>
+        </h2>
+        <span class="px-2.5 py-1 bg-gray-800 rounded-full text-xs text-gray-400 border border-gray-700"
+              x-text="`${filteredNews.length} notícias`"></span>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <template x-for="(item, idx) in trending" :key="item.id">
-          <a :href="item.url" target="_blank" 
-             class="group relative bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-xl p-4 hover:border-orange-500/50 transition-all">
-            <div class="absolute -top-2 -left-2 w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-xs font-bold text-white shadow-lg"
-                 x-text="`#${idx + 1}`"></div>
-            <div class="flex items-center gap-2 mb-2">
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase" :class="item.categoryColors" x-text="item.categoryLabel"></span>
-              <span class="text-xs text-gray-500" x-text="item.source"></span>
-            </div>
-            <h4 class="font-semibold text-sm text-gray-100 group-hover:text-orange-400 transition-colors line-clamp-2" x-text="item.title"></h4>
-            <div class="flex items-center justify-between mt-3 text-xs text-gray-500">
-              <span x-text="timeAgo(item.date)"></span>
-              <span class="flex items-center gap-1 text-orange-400">
-                <i class="ph-fill ph-trend-up"></i>
-                <span x-text="item.score"></span>
-              </span>
-            </div>
-          </a>
-        </template>
+      
+      <div class="flex items-center gap-2 text-xs text-gray-500">
+        <span>Atualizado:</span>
+        <span class="font-mono text-gray-300" x-text="lastUpdate"></span>
       </div>
     </div>
 
-    <!-- FEED VIEW -->
-    <div x-show="view === 'feed'" x-cloak>
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-semibold" x-text="getCategoryLabel(filters.category)"></h2>
-        <div class="flex items-center gap-2 text-sm text-gray-500">
-          <button @click="refreshNews(true)" :disabled="loading" 
-                  class="flex items-center gap-1.5 hover:text-blue-400 transition-colors disabled:opacity-50">
-            <i class="ph-bold ph-arrows-clockwise" :class="{'animate-spin': loading}"></i>
-            <span x-text="loading ? 'Atualizando...' : 'Atualizar'"></span>
-          </button>
-          <span>•</span>
-          <span>Cache: <span x-text="cacheInfo"></span></span>
+    <!-- ================= VIEW: FEED ================= -->
+    <div x-show="view === 'feed'" x-cloak class="space-y-4">
+      
+      <!-- Trending Mini-Bar -->
+      <div x-show="trending.length > 0" class="p-4 bg-gradient-to-r from-orange-900/20 to-red-900/20 border border-orange-500/20 rounded-xl">
+        <div class="flex items-center gap-2 mb-3">
+          <i class="ph-fill ph-fire text-orange-500 animate-pulse"></i>
+          <h3 class="font-bold text-sm text-orange-400">🔥 Tendências</h3>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <template x-for="(item, idx) in trending.slice(0, 5)" :key="item.id">
+            <a :href="item.url" target="_blank" rel="noopener"
+               class="group px-3 py-1.5 bg-gray-800/80 hover:bg-gray-700 border border-gray-700 rounded-lg text-xs transition flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center text-[10px] font-bold" x-text="`#${idx+1}`"></span>
+              <span class="text-gray-300 group-hover:text-white line-clamp-1 max-w-[180px]" x-text="item.title"></span>
+            </a>
+          </template>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 gap-4">
+      <!-- News Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <template x-for="item in paginatedNews" :key="item.id">
-          <article class="group bg-gray-900/40 border border-gray-800 rounded-xl overflow-hidden hover:border-blue-500/50 hover:bg-gray-800/50 transition-all duration-200 fade-in">
+          <article class="group bg-gray-900/40 border border-gray-800 rounded-2xl overflow-hidden hover:border-blue-500/40 hover:bg-gray-800/40 transition-all duration-300 fade-in cursor-pointer"
+                   @click="window.open(item.url, '_blank', 'noopener')">
             <div class="flex flex-col sm:flex-row">
-              <div class="w-full sm:w-52 h-48 sm:h-auto relative shrink-0 bg-gray-800">
+              
+              <!-- Image -->
+              <div class="w-full sm:w-56 h-44 sm:h-auto relative shrink-0 bg-gray-800">
                 <img :src="item.image || getDefaultImage(item.category)" 
-                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                     @error="$el.parentElement.innerHTML = '<div class=\'w-full h-full flex items-center justify-center bg-gray-800 text-gray-600 text-xs\'><i class=\'ph-bold ph-image mr-1\'></i> Sem imagem</div>'">
+                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                     @error="$el.parentElement.innerHTML = '<div class=\\'w-full h-full flex flex-col items-center justify-center bg-gray-800 text-gray-500\\'><i class=\\'ph-bold ph-image text-2xl mb-1\\'></i><span class=\\'text-xs\\'>Sem imagem</span></div>'">
                 
-                <div x-show="item.score >= 12" class="absolute top-3 right-3 bg-orange-500/90 text-white text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1 shadow-lg">
+                <!-- Score Badge -->
+                <div x-show="item.score >= 15" 
+                     class="absolute top-3 right-3 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-lg shadow-orange-500/30">
                   <i class="ph-fill ph-fire"></i> HOT
+                </div>
+                
+                <!-- Category Badge -->
+                <div class="absolute top-3 left-3">
+                  <span class="px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide shadow" 
+                        :class="getCategoryColors(item.category)" 
+                        x-text="getCategoryLabel(item.category)"></span>
                 </div>
               </div>
               
-              <div class="p-5 flex flex-col justify-between flex-1">
+              <!-- Content -->
+              <div class="p-4 sm:p-5 flex flex-col justify-between flex-1 min-w-0">
                 <div>
+                  <!-- Meta Row -->
                   <div class="flex items-center gap-2 mb-3 flex-wrap">
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider" :class="item.categoryColors" x-text="item.categoryLabel"></span>
                     <span class="text-gray-500 text-xs flex items-center gap-1">
                       <i class="ph ph-clock"></i>
                       <span x-text="timeAgo(item.date)"></span>
                     </span>
-                  </div>
-
-                  <h3 class="text-lg font-bold text-gray-100 group-hover:text-blue-400 transition-colors mb-2 leading-tight"
-                      x-text="item.title"></h3>
-                  
-                  <p x-show="item.desc" class="text-sm text-gray-400 line-clamp-2 mb-4" x-text="item.desc"></p>
-                </div>
-
-                <div class="flex items-center justify-between pt-3 border-t border-gray-800/50">
-                  <div class="flex items-center gap-3">
-                    <span class="text-xs font-medium text-gray-300 flex items-center gap-1">
+                    <span class="text-gray-600">•</span>
+                    <span class="text-xs font-medium text-gray-400 flex items-center gap-1">
                       <i class="ph-bold ph-broadcast"></i>
                       <span x-text="item.source"></span>
                     </span>
                   </div>
+
+                  <!-- Title -->
+                  <h3 class="text-base sm:text-lg font-bold text-gray-100 group-hover:text-blue-400 transition-colors mb-2 leading-snug line-clamp-2"
+                      x-text="item.title"></h3>
+                  
+                  <!-- Description -->
+                  <p x-show="item.desc" class="text-sm text-gray-400 line-clamp-2 mb-4" x-text="item.desc"></p>
+                </div>
+
+                <!-- Footer -->
+                <div class="flex items-center justify-between pt-3 border-t border-gray-800/50">
+                  <div class="flex items-center gap-2">
+                    <template x-if="item.keywords?.length">
+                      <div class="flex gap-1 flex-wrap">
+                        <template x-for="kw in item.keywords.slice(0, 3)" :key="kw">
+                          <span class="text-[10px] px-2 py-0.5 bg-gray-800 rounded-full text-gray-500 border border-gray-700" x-text="`#${kw}`"></span>
+                        </template>
+                      </div>
+                    </template>
+                  </div>
                   <span class="text-xs text-blue-500 font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    Ler original <i class="ph-bold ph-arrow-right"></i>
+                    Ler <i class="ph-bold ph-arrow-right"></i>
                   </span>
                 </div>
               </div>
@@ -301,293 +464,638 @@
         </template>
       </div>
 
-      <div x-show="totalPages > 1" class="flex items-center justify-center gap-2 mt-6">
+      <!-- Pagination -->
+      <div x-show="totalPages > 1" class="flex items-center justify-center gap-1.5 mt-8 pt-6 border-t border-gray-800">
         <button @click="currentPage--" :disabled="currentPage === 1" 
-                class="px-4 py-2 rounded-lg bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 transition-colors">
+                class="px-3.5 py-2 rounded-lg bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-700 transition-colors text-sm font-medium">
           <i class="ph-bold ph-caret-left"></i>
         </button>
+        
         <template x-for="page in getPages()" :key="page">
-          <button @click="currentPage = page"
-                  class="w-10 h-10 rounded-lg text-sm font-medium transition-colors"
-                  :class="currentPage === page ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'"
-                  x-text="page"></button>
+          <template x-if="page === '...'">
+            <span class="px-3 py-2 text-gray-500">...</span>
+          </template>
+          <template x-if="page !== '...'">
+            <button @click="currentPage = page"
+                    class="w-9 h-9 rounded-lg text-sm font-medium transition-colors"
+                    :class="currentPage === page ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200'"
+                    x-text="page"></button>
+          </template>
         </template>
+        
         <button @click="currentPage++" :disabled="currentPage === totalPages"
-                class="px-4 py-2 rounded-lg bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 transition-colors">
+                class="px-3.5 py-2 rounded-lg bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-700 transition-colors text-sm font-medium">
           <i class="ph-bold ph-caret-right"></i>
         </button>
       </div>
 
-      <div x-show="!loading && filteredNews.length === 0" class="text-center py-16 text-gray-500">
-        <i class="ph-duotone ph-newspaper-clipping text-5xl mb-4"></i>
-        <p class="text-lg mb-2">Nenhuma notícia encontrada</p>
-      </div>
-    </div>
-
-    <!-- HEADLINES PANEL -->
-    <div x-show="view === 'headlines'" x-cloak class="max-w-4xl mx-auto">
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <h2 class="text-2xl font-bold text-white mb-1">🤖 Painel de Manchetes para IA</h2>
-          <p class="text-sm text-gray-400">Copie títulos otimizados para gerar insights</p>
-        </div>
-        <button @click="copyHeadlines()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors">
-          Copiar Tudo
+      <!-- Empty State -->
+      <div x-show="!isUpdating && filteredNews.length === 0" class="text-center py-20 text-gray-500 animate-fade-in">
+        <i class="ph-duotone ph-newspaper-clipping text-6xl mb-4 text-gray-700"></i>
+        <p class="text-lg font-medium text-gray-400 mb-2">Nenhuma notícia encontrada</p>
+        <p class="text-sm mb-4">Tente ajustar os filtros ou buscar por outros termos</p>
+        <button @click="filters = {category: 'all', search: ''}; currentPage = 1" 
+                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition">
+          Limpar filtros
         </button>
       </div>
-      <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-2">
-        <template x-for="item in news.slice(0, 20)" :key="item.id">
-          <div class="flex items-start gap-3 p-3 rounded-lg bg-gray-800/50 hover:bg-gray-800 transition-colors">
-            <input type="checkbox" class="mt-1 rounded border-gray-700 bg-gray-800 text-blue-600">
-            <div class="flex-1">
-              <p class="text-sm text-gray-300" x-text="item.title"></p>
-              <p class="text-xs text-gray-500 mt-1" x-text="`${item.source} • ${timeAgo(item.date)}`"></p>
+    </div>
+
+    <!-- ================= VIEW: TRENDING ================= -->
+    <div x-show="view === 'trending'" x-cloak class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <template x-for="(item, idx) in trending" :key="item.id">
+          <a :href="item.url" target="_blank" rel="noopener"
+             class="group relative bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-2xl p-5 hover:border-orange-500/50 hover:shadow-lg hover:shadow-orange-500/10 transition-all">
+            
+            <!-- Rank Badge -->
+            <div class="absolute -top-2.5 -left-2.5 w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-sm font-bold text-white shadow-lg shadow-orange-500/40"
+                 x-text="`#${idx + 1}`"></div>
+            
+            <div class="flex items-center gap-2 mb-3 pt-2">
+              <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase" :class="getCategoryColors(item.category)" x-text="getCategoryLabel(item.category)"></span>
+              <span class="text-xs text-gray-500" x-text="item.source"></span>
             </div>
-          </div>
+            
+            <h4 class="font-bold text-gray-100 group-hover:text-orange-400 transition-colors mb-3 line-clamp-3 leading-snug" x-text="item.title"></h4>
+            
+            <p x-show="item.desc" class="text-sm text-gray-400 line-clamp-2 mb-4" x-text="item.desc"></p>
+            
+            <div class="flex items-center justify-between pt-3 border-t border-gray-800">
+              <span class="text-xs text-gray-500" x-text="timeAgo(item.date)"></span>
+              <span class="flex items-center gap-1.5 text-sm font-medium" :class="item.score >= 20 ? 'text-orange-400' : 'text-gray-400'">
+                <i class="ph-fill" :class="item.score >= 20 ? 'ph-fire text-orange-500' : 'ph-trend-up'"></i>
+                <span x-text="item.score"></span>
+              </span>
+            </div>
+          </a>
         </template>
       </div>
+      
+      <div x-show="trending.length === 0" class="text-center py-16 text-gray-500">
+        <i class="ph-duotone ph-fire text-5xl mb-3 text-gray-700"></i>
+        <p class="text-gray-400">Nenhuma notícia em alta no momento</p>
+      </div>
     </div>
+
+    <!-- ================= VIEW: AI COPY ================= -->
+    <div x-show="view === 'ai-copy'" x-cloak class="max-w-5xl mx-auto">
+      
+      <!-- Header -->
+      <div class="mb-6 p-5 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/30 rounded-2xl">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-bold text-white mb-1 flex items-center gap-2">
+              <i class="ph-bold ph-robot text-purple-400"></i>
+              Copiar Notícias para IA Generativa
+            </h2>
+            <p class="text-sm text-gray-400">Selecione notícias e copie no formato ideal para Midjourney, DALL-E 3, ChatGPT ou Claude</p>
+          </div>
+          <div class="flex gap-2">
+            <button @click="selectAllAI = !selectAllAI; updateAISelection()"
+                    class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm font-medium transition border border-gray-700">
+              <span x-text="selectAllAI ? 'Desmarcar' : 'Selecionar Todas'"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selection List -->
+      <div class="mb-6 bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden">
+        <div class="p-4 border-b border-gray-800 bg-gray-800/30 flex items-center justify-between">
+          <span class="text-sm font-medium text-gray-300">
+            <span x-text="selectedForAI.length"></span> selecionada<span x-show="selectedForAI.length !== 1">s</span>
+          </span>
+          <div class="flex gap-2">
+            <button @click="copyFormat('titles')" 
+                    class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
+              <i class="ph-bold ph-list"></i> Copiar Títulos
+            </button>
+            <button @click="copyFormat('metadata')" 
+                    class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
+              <i class="ph-bold ph-database"></i> Com Metadados
+            </button>
+            <button @click="copyFormat('prompt')" 
+                    class="px-3 py-1.5 bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-90 rounded-lg text-xs font-medium transition flex items-center gap-1.5 shadow-lg shadow-purple-500/25">
+              <i class="ph-bold ph-magic-wand"></i> Prompt Pronto
+            </button>
+          </div>
+        </div>
+        
+        <div class="max-h-80 overflow-y-auto">
+          <template x-for="item in news" :key="item.id">
+            <label class="flex items-start gap-3 p-4 hover:bg-gray-800/50 transition cursor-pointer border-b border-gray-800/50 last:border-0">
+              <input type="checkbox" :value="item.id" x-model="selectedForAI" @change="updateAISelection()"
+                     class="mt-1 w-4 h-4 rounded border-gray-600 bg-gray-800 text-purple-600 focus:ring-purple-500 focus:ring-offset-0">
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-200 line-clamp-2" x-text="item.title"></p>
+                <div class="flex items-center gap-2 mt-1.5 text-xs text-gray-500">
+                  <span :class="getCategoryColors(item.category)" class="px-1.5 py-0.5 rounded text-[10px] font-medium" x-text="getCategoryLabel(item.category)"></span>
+                  <span>•</span>
+                  <span x-text="item.source"></span>
+                  <span>•</span>
+                  <span x-text="timeAgo(item.date)"></span>
+                </div>
+              </div>
+            </label>
+          </template>
+        </div>
+      </div>
+
+      <!-- Preview Area -->
+      <div class="copy-area rounded-2xl p-5">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-medium text-gray-400 uppercase tracking-wide">Preview do Texto Copiado</span>
+          <button @click="copyPreview()" 
+                  class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
+            <i class="ph-bold ph-copy"></i> Copiar Preview
+          </button>
+        </div>
+        <textarea readonly 
+                  class="w-full h-48 bg-gray-900/50 border border-gray-700 rounded-xl p-4 text-sm text-gray-300 font-mono resize-none focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                  x-text="previewText"
+                  placeholder="Selecione notícias acima para gerar o preview..."></textarea>
+        <p class="text-xs text-gray-500 mt-3 flex items-center gap-2">
+          <i class="ph-bold ph-info"></i>
+          <span>O texto é formatado automaticamente para melhor resultado em IAs de imagem e texto</span>
+        </p>
+      </div>
+
+      <!-- Format Guide -->
+      <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="p-4 bg-gray-900/50 border border-gray-800 rounded-xl">
+          <h4 class="font-medium text-gray-200 mb-2 flex items-center gap-2">
+            <i class="ph-bold ph-list text-blue-400"></i> Títulos
+          </h4>
+          <p class="text-xs text-gray-500">Lista limpa de títulos, ideal para brainstorming no ChatGPT ou Claude</p>
+        </div>
+        <div class="p-4 bg-gray-900/50 border border-gray-800 rounded-xl">
+          <h4 class="font-medium text-gray-200 mb-2 flex items-center gap-2">
+            <i class="ph-bold ph-database text-purple-400"></i> Metadados
+          </h4>
+          <p class="text-xs text-gray-500">Títulos + fonte, data e categoria. Perfeito para análise contextual</p>
+        </div>
+        <div class="p-4 bg-gray-900/50 border border-gray-800 rounded-xl">
+          <h4 class="font-medium text-gray-200 mb-2 flex items-center gap-2">
+            <i class="ph-bold ph-magic-wand text-pink-400"></i> Prompt Pronto
+          </h4>
+          <p class="text-xs text-gray-500">Texto otimizado para Midjourney/DALL-E: "Crie uma imagem sobre: [notícias]"</p>
+        </div>
+      </div>
+    </div>
+
   </main>
 
+  <!-- ================= FOOTER ================= -->
+  <footer class="border-t border-gray-800 py-6 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 text-center">
+      <p class="text-xs text-gray-600">
+        CryptoNews Pro • Dados atualizados a cada 15 minutos • 
+        <button @click="showAbout = true" class="text-blue-500 hover:underline">Sobre</button>
+      </p>
+    </div>
+  </footer>
+
+  <!-- ================= ABOUT MODAL ================= -->
+  <div x-show="showAbout" x-cloak class="fixed inset-0 z-[130] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" @click.self="showAbout = false">
+    <div class="bg-gray-900 border border-gray-700 rounded-2xl p-6 max-w-md w-full shadow-2xl animate-fade-in">
+      <h3 class="text-lg font-bold mb-3">Sobre o CryptoNews Pro</h3>
+      <ul class="text-sm text-gray-400 space-y-2 mb-4">
+        <li class="flex items-start gap-2"><i class="ph-bold ph-check text-green-400 mt-0.5"></i> Atualização automática a cada 15 minutos</li>
+        <li class="flex items-start gap-2"><i class="ph-bold ph-check text-green-400 mt-0.5"></i> Atualização manual com botão ou Ctrl+R</li>
+        <li class="flex items-start gap-2"><i class="ph-bold ph-check text-green-400 mt-0.5"></i> Aba "Copiar para IA" com 3 formatos de exportação</li>
+        <li class="flex items-start gap-2"><i class="ph-bold ph-check text-green-400 mt-0.5"></i> Modo Demo funcional sem API keys</li>
+        <li class="flex items-start gap-2"><i class="ph-bold ph-check text-green-400 mt-0.5"></i> Dados simulados com cotações realistas (BTC ~$78k)</li>
+      </ul>
+      <button @click="showAbout = false" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition">
+        Entendi, fechar
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= JAVASCRIPT LOGIC ================= -->
   <script>
     function cryptoNewsApp() {
       return {
-        view: 'feed', // ABRE NO FEED POR PADRÃO
-        loading: false,
+        // ===== STATE =====
+        view: 'feed', // ✅ ABRE NO FEED POR PADRÃO
+        isUpdating: false,
         error: null,
         showSearch: false,
+        showAbout: false,
         isDark: true,
-        breakingNews: null,
+        demoMode: false,
         hasValidKeys: false,
+        breakingNews: null,
+        
+        // Auto-refresh
+        autoRefreshInterval: null,
+        nextUpdateTimestamp: null,
+        lastUpdateTimestamp: null,
+        
+        // Prices (demo realistic values - BTC ~$78k as requested)
+        btcPrice: 78247.50,
+        btcChange: 2.34,
+        ethPrice: 3842.18,
+        
+        // API Keys
+        apiKeys: { newsapi: '' },
+        
+        // Pagination & Filters
         currentPage: 1,
-        itemsPerPage: 10,
+        itemsPerPage: 12,
+        filters: { category: 'all', search: '' },
         
-        apiKeys: {
-          newsapi: '',
-          cryptopanic: '',
-          gemini: ''
-        },
-        
-        stats: {
-          total24h: 236
-        },
-        
+        // Categories
         categories: [
-          { id: 'all', label: 'Todas', icon: '☰', count: 0, activeClass: 'bg-blue-600 text-white border-blue-500' },
-          { id: 'crypto', label: 'Cripto', icon: '₿', count: 0, activeClass: 'bg-yellow-600 text-white border-yellow-500' },
-          { id: 'macro', label: 'Macro', icon: '📊', count: 0, activeClass: 'bg-blue-600 text-white border-blue-500' },
-          { id: 'politics', label: 'Política', icon: '🏛', count: 0, activeClass: 'bg-red-600 text-white border-red-500' }
+          { id: 'all', label: 'Todas', icon: '☰', count: 0, activeClass: 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/25' },
+          { id: 'crypto', label: 'Cripto', icon: '₿', count: 0, activeClass: 'bg-yellow-600 text-white border-yellow-500 shadow-lg shadow-yellow-500/25' },
+          { id: 'macro', label: 'Macro', icon: '📊', count: 0, activeClass: 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/25' },
+          { id: 'politics', label: 'Política', icon: '🏛', count: 0, activeClass: 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-500/25' },
+          { id: 'tech', label: 'Tech', icon: '💻', count: 0, activeClass: 'bg-purple-600 text-white border-purple-500 shadow-lg shadow-purple-500/25' }
         ],
         
-        filters: {
-          category: 'all',
-          search: ''
-        },
-        
+        // Data
         news: [],
         searchResults: [],
         cacheInfo: '--',
         activeSources: [],
+        connectionStatus: 'online', // online, updating, offline
         
+        // AI Copy
+        selectedForAI: [],
+        selectAllAI: false,
+        previewText: '',
+        
+        // Toasts
+        toasts: [],
+        toastId: 0,
+        
+        // ===== INIT =====
         init() {
           this.loadKeys();
-          this.fetchNews();
-          setInterval(() => this.fetchNews(false), 300000); // Atualiza a cada 5 min
+          this.loadFromCache();
+          this.fetchNews(true);
+          this.startAutoRefresh(); // ✅ 15 MINUTOS
+          this.startPriceSimulation();
+          this.updateNextUpdateDisplay();
+          setInterval(() => this.updateNextUpdateDisplay(), 1000);
         },
         
-        loadKeys() {
-          const saved = localStorage.getItem('cryptoNewsKeys');
-          if (saved) {
-            this.apiKeys = JSON.parse(saved);
-            this.hasValidKeys = !!(this.apiKeys.newsapi || this.apiKeys.cryptopanic);
-          }
-        },
-        
-        saveKeys() {
-          localStorage.setItem('cryptoNewsKeys', JSON.stringify(this.apiKeys));
-          this.hasValidKeys = true;
-          this.fetchNews();
-        },
-        
-        useDemoMode() {
-          this.hasValidKeys = true;
-          this.loadDemoData();
-        },
-        
-        loadDemoData() {
-          this.news = [
-            {
-              id: '1',
-              title: 'Bitcoin dispara acima de $73.000 após aprovação de ETF spot por BlackRock',
-              desc: 'Institucionais entram agressivamente no mercado enquanto Fed sinaliza pausa nos juros',
-              category: 'crypto',
-              source: 'CoinDesk',
-              date: new Date(Date.now() - 1800000).toISOString(),
-              url: '#',
-              image: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=400',
-              score: 32,
-              keywords: ['bitcoin', 'etf']
-            },
-            {
-              id: '2',
-              title: 'Fed mantém taxas de juros inalteradas; Powell cita inflação persistente',
-              desc: 'Mercados reagem com volatilidade às declarações do presidente do Federal Reserve',
-              category: 'macro',
-              source: 'Bloomberg',
-              date: new Date(Date.now() - 7200000).toISOString(),
-              url: '#',
-              image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400',
-              score: 15,
-              keywords: ['fed', 'juros']
-            },
-            {
-              id: '3',
-              title: 'SEC aprova novo framework regulatório para stablecoins nos EUA',
-              desc: 'Proposta visa trazer clareza jurídica para emissores de moedas digitais lastreadas',
-              category: 'politics',
-              source: 'Reuters',
-              date: new Date(Date.now() - 14400000).toISOString(),
-              url: '#',
-              image: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=400',
-              score: 18,
-              keywords: ['sec', 'regulacao']
-            },
-            {
-              id: '4',
-              title: 'Ethereum atinge novo recorde de transações diárias na camada 2',
-              desc: 'Arbitrum e Optimism lideram crescimento enquanto taxas na mainnet caem',
-              category: 'crypto',
-              source: 'The Block',
-              date: new Date(Date.now() - 3600000).toISOString(),
-              url: '#',
-              image: 'https://images.unsplash.com/photo-1622630998477-20aa696fa405?w=400',
-              score: 22,
-              keywords: ['ethereum', 'layer2']
-            },
-            {
-              id: '5',
-              title: 'Inflação nos EUA cai para 3.1% em novembro, abaixo do esperado',
-              desc: 'Dados reforçam expectativa de corte de juros pelo Fed em 2024',
-              category: 'macro',
-              source: 'WSJ',
-              date: new Date(Date.now() - 18000000).toISOString(),
-              url: '#',
-              image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400',
-              score: 13,
-              keywords: ['inflacao', 'economia']
-            }
-          ];
+        // ===== AUTO-REFRESH (15 MINUTOS) =====
+        startAutoRefresh() {
+          // 15 minutos = 900000 ms
+          const INTERVAL = 15 * 60 * 1000;
           
-          this.updateStats();
-          this.cacheInfo = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+          this.autoRefreshInterval = setInterval(() => {
+            this.refreshManual();
+          }, INTERVAL);
         },
         
-        async fetchNews(showLoading = true) {
-          if (showLoading) this.loading = true;
+        updateNextUpdateDisplay() {
+          if (!this.nextUpdateTimestamp) return;
+          const now = Date.now();
+          const diff = Math.max(0, this.nextUpdateTimestamp - now);
+          const mins = Math.floor(diff / 60000);
+          const secs = Math.floor((diff % 60000) / 1000);
+          this.nextUpdate = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+        },
+        
+        // ===== MANUAL REFRESH =====
+        async refreshManual() {
+          if (this.isUpdating) return;
+          this.isUpdating = true;
+          this.connectionStatus = 'updating';
           this.error = null;
           
           try {
-            if (this.apiKeys.newsapi) {
-              await this.fetchFromNewsAPI();
-            } else if (this.apiKeys.cryptopanic) {
-              await this.fetchFromCryptoPanic();
-            } else {
-              this.loadDemoData();
-            }
+            await this.fetchNews(false);
+            this.addToast('Notícias atualizadas com sucesso!', 'success');
           } catch (err) {
-            this.error = 'Erro ao buscar notícias: ' + err.message;
-            console.error(err);
+            this.error = 'Falha ao atualizar: ' + err.message;
+            this.addToast('Erro ao atualizar notícias', 'error');
           } finally {
-            this.loading = false;
+            this.isUpdating = false;
+            this.connectionStatus = 'online';
+            this.scheduleNextUpdate();
           }
         },
         
+        scheduleNextUpdate() {
+          this.nextUpdateTimestamp = Date.now() + (15 * 60 * 1000);
+          this.lastUpdateTimestamp = Date.now();
+          this.updateNextUpdateDisplay();
+          this.cacheInfo = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+          this.saveToCache();
+        },
+        
+        // ===== FETCH NEWS =====
+        async fetchNews(showLoading = true) {
+          if (showLoading) this.isUpdating = true;
+          
+          try {
+            if (this.apiKeys.newsapi && !this.demoMode) {
+              await this.fetchFromNewsAPI();
+            } else {
+              this.loadDemoData(); // ✅ Dados demo com BTC ~$78k
+            }
+            this.updateStats();
+            this.scheduleNextUpdate();
+          } catch (err) {
+            console.error('Fetch error:', err);
+            if (this.news.length === 0) this.loadDemoData(); // Fallback
+            throw err;
+          } finally {
+            if (showLoading) this.isUpdating = false;
+          }
+        },
+        
+        // ===== DEMO DATA (BTC ~$78,000) =====
+        loadDemoData() {
+          const now = Date.now();
+          this.news = [
+            {
+              id: 'btc-1',
+              title: 'Bitcoin dispara para $78.247 após aprovação de ETFs por grandes gestoras',
+              desc: 'BlackRock, Fidelity e Ark Invest registram entradas líquidas de $1.2 bi em 24h. Analistas projetam $85k até dezembro.',
+              category: 'crypto',
+              source: 'CoinDesk',
+              date: new Date(now - 2 * 60 * 1000).toISOString(), // 2 min ago
+              url: 'https://coindesk.com',
+              image: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=600&h=400&fit=crop',
+              score: 45,
+              keywords: ['bitcoin', 'etf', 'blackrock']
+            },
+            {
+              id: 'fed-1',
+              title: 'Fed mantém juros inalterados; Powell sinaliza possível corte em dezembro',
+              desc: 'Mercados reagem positivamente às declarações dovish. Dólar cai 0.8% e criptos sobem em conjunto.',
+              category: 'macro',
+              source: 'Bloomberg',
+              date: new Date(now - 18 * 60 * 1000).toISOString(),
+              url: 'https://bloomberg.com',
+              image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&h=400&fit=crop',
+              score: 38,
+              keywords: ['fed', 'juros', 'powell']
+            },
+            {
+              id: 'eth-1',
+              title: 'Ethereum ultrapassa $3.840 com expectativa de upgrade Pectra em Q1 2025',
+              desc: 'Desenvolvedores confirmam data para implementação de melhorias de escalabilidade e staking.',
+              category: 'crypto',
+              source: 'The Block',
+              date: new Date(now - 45 * 60 * 1000).toISOString(),
+              url: 'https://theblock.co',
+              image: 'https://images.unsplash.com/photo-1622630998477-20aa696fa405?w=600&h=400&fit=crop',
+              score: 32,
+              keywords: ['ethereum', 'upgrade', 'staking']
+            },
+            {
+              id: 'sec-1',
+              title: 'SEC aprova framework regulatório para stablecoins nos EUA',
+              desc: 'Nova regra exige reservas 1:1 em títulos do Tesouro. USDC e USDT devem se adaptar até março/2025.',
+              category: 'politics',
+              source: 'Reuters',
+              date: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
+              url: 'https://reuters.com',
+              image: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600&h=400&fit=crop',
+              score: 29,
+              keywords: ['sec', 'stablecoin', 'regulacao']
+            },
+            {
+              id: 'ai-1',
+              title: 'OpenAI anuncia parceria com Coinbase para pagamentos em cripto no ChatGPT',
+              desc: 'Usuários Plus poderão assinar com Bitcoin, Ethereum e USDC. Integração deve chegar em janeiro.',
+              category: 'tech',
+              source: 'TechCrunch',
+              date: new Date(now - 3 * 60 * 60 * 1000).toISOString(),
+              url: 'https://techcrunch.com',
+              image: 'https://images.unsplash.com/photo-1677442135161-8c2d6c5b5f3e?w=600&h=400&fit=crop',
+              score: 41,
+              keywords: ['openai', 'coinbase', 'pagamentos']
+            },
+            {
+              id: 'inflacao-1',
+              title: 'Inflação nos EUA cai para 2.9% em novembro, menor nível em 3 anos',
+              desc: 'Dados reforçam cenário de cortes de juros. S&P 500 e Nasdaq fecham em alta recorde.',
+              category: 'macro',
+              source: 'WSJ',
+              date: new Date(now - 5 * 60 * 60 * 1000).toISOString(),
+              url: 'https://wsj.com',
+              image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&h=400&fit=crop',
+              score: 25,
+              keywords: ['inflacao', 'economia', 'fed']
+            },
+            {
+              id: 'sol-1',
+              title: 'Solana atinge novo ATH de transações: 65 milhões em 24h',
+              desc: 'Rede processa recorde impulsionado por memecoins e DeFi. Taxas médias caem para $0.003.',
+              category: 'crypto',
+              source: 'Decrypt',
+              date: new Date(now - 7 * 60 * 60 * 1000).toISOString(),
+              url: 'https://decrypt.co',
+              image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600&h=400&fit=crop',
+              score: 27,
+              keywords: ['solana', 'defi', 'transacoes']
+            },
+            {
+              id: 'eu-1',
+              title: 'Parlamento Europeu aprova MiCA: regulamentação cripto entra em vigor em 2025',
+              desc: 'Nova lei exige licenciamento para exchanges e emissores. Brasil estuda modelo similar.',
+              category: 'politics',
+              source: 'CoinTelegraph',
+              date: new Date(now - 9 * 60 * 60 * 1000).toISOString(),
+              url: 'https://cointelegraph.com',
+              image: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=600&h=400&fit=crop',
+              score: 22,
+              keywords: ['mica', 'europa', 'regulacao']
+            },
+            {
+              id: 'nvidia-1',
+              title: 'Nvidia anuncia chip especializado em mineração de cripto com 90% menos consumo',
+              desc: 'Novo ASIC promete revolucionar mineração sustentável. Ações da empresa sobem 4% em pré-market.',
+              category: 'tech',
+              source: 'The Verge',
+              date: new Date(now - 11 * 60 * 60 * 1000).toISOString(),
+              url: 'https://theverge.com',
+              image: 'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=600&h=400&fit=crop',
+              score: 35,
+              keywords: ['nvidia', 'mining', 'sustentabilidade']
+            },
+            {
+              id: 'btc-2',
+              title: 'MicroStrategy compra mais 15.350 BTC por $1.5 bilhão',
+              desc: 'Empresa de Saylor agora detém 190.000 bitcoins. Estratégia de acumulação continua inalterada.',
+              category: 'crypto',
+              source: 'Bitcoin Magazine',
+              date: new Date(now - 14 * 60 * 60 * 1000).toISOString(),
+              url: 'https://bitcoinmagazine.com',
+              image: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=600&h=400&fit=crop',
+              score: 40,
+              keywords: ['microstrategy', 'saylor', 'acumulacao']
+            },
+            {
+              id: 'defi-1',
+              title: 'TVL em DeFi ultrapassa $120 bilhões, maior valor desde maio de 2022',
+              desc: 'Ethereum lidera com 65% do mercado. Lido, Aave e Uniswap são os protocolos mais utilizados.',
+              category: 'crypto',
+              source: 'DeFi Llama',
+              date: new Date(now - 16 * 60 * 60 * 1000).toISOString(),
+              url: 'https://defillama.com',
+              image: 'https://images.unsplash.com/photo-1639322537228-f710d846310a?w=600&h=400&fit=crop',
+              score: 19,
+              keywords: ['defi', 'tvl', 'ethereum']
+            },
+            {
+              id: 'japan-1',
+              title: 'Japão permite que empresas listem Bitcoin em balanços como reserva de valor',
+              desc: 'Nova diretriz do FSA abre caminho para adoção institucional. Bolsas de Tóquio estudam produtos derivativos.',
+              category: 'politics',
+              source: 'Nikkei Asia',
+              date: new Date(now - 19 * 60 * 60 * 1000).toISOString(),
+              url: 'https://asia.nikkei.com',
+              image: 'https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d?w=600&h=400&fit=crop',
+              score: 24,
+              keywords: ['japao', 'fsa', 'instituicional']
+            },
+            {
+              id: 'layer2-1',
+              title: 'Arbitrum e Base lideram crescimento de Layer 2 com +300% em usuários ativos',
+              desc: 'Taxas 95% menores que Ethereum mainnet impulsionam adoção. Coinbase integra Base nativamente no app.',
+              category: 'tech',
+              source: 'L2Beat',
+              date: new Date(now - 22 * 60 * 60 * 1000).toISOString(),
+              url: 'https://l2beat.com',
+              image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600&h=400&fit=crop',
+              score: 21,
+              keywords: ['layer2', 'arbitrum', 'base']
+            },
+            {
+              id: 'etf-flow',
+              title: 'ETFs de Bitcoin registram entrada líquida de $890 mi na semana',
+              desc: 'IBIT da BlackRock lidera com $420 mi. Saídas de GBTC desaceleram após conversão para ETF.',
+              category: 'crypto',
+              source: 'Farside Investors',
+              date: new Date(now - 1 * 60 * 60 * 1000).toISOString(),
+              url: 'https://farside.co.uk',
+              image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&h=400&fit=crop',
+              score: 36,
+              keywords: ['etf', 'blackrock', 'fluxo']
+            },
+            {
+              id: 'cbdc-1',
+              title: 'Banco Central do Brasil acelera testes do Drex para pagamentos programáveis',
+              desc: 'Piloto com 5 bancos deve concluir em Q1/2025. Smart contracts permitirão pagamentos condicionais.',
+              category: 'politics',
+              source: 'Valor Econômico',
+              date: new Date(now - 4 * 60 * 60 * 1000).toISOString(),
+              url: 'https://valor.globo.com',
+              image: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600&h=400&fit=crop',
+              score: 18,
+              keywords: ['drex', 'bacen', 'cbdc']
+            }
+          ];
+          
+          // Update prices slightly for realism
+          this.btcPrice = 78247.50 + (Math.random() - 0.5) * 200;
+          this.btcChange = 2.34 + (Math.random() - 0.5) * 0.5;
+          this.ethPrice = 3842.18 + (Math.random() - 0.5) * 50;
+          
+          this.activeSources = ['CoinDesk', 'Bloomberg', 'Reuters', 'The Block', 'CoinTelegraph'];
+          this.cacheInfo = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+        },
+        
+        // ===== NEWSAPI INTEGRATION =====
         async fetchFromNewsAPI() {
-          const queries = ['bitcoin', 'cryptocurrency', 'federal reserve', 'ethereum'];
-          const allArticles = [];
+          const queries = [
+            'bitcoin OR cryptocurrency',
+            'ethereum OR altcoin',
+            'federal reserve OR interest rates',
+            'sec regulation crypto',
+            'blockchain technology'
+          ];
+          
+          let allArticles = [];
           
           for (const q of queries) {
-            const url = `https://newsapi.org/v2/everything?q=${q}&language=en&sortBy=publishedAt&pageSize=5&apiKey=${this.apiKeys.newsapi}`;
-            const res = await fetch(url);
-            const data = await res.json();
-            if (data.articles) {
-              allArticles.push(...data.articles.map((article, i) => ({
-                id: `${q}-${i}-${Date.now()}`,
-                title: article.title,
-                desc: article.description || '',
-                category: this.categorizeNews(q, article.title),
-                source: article.source.name,
-                date: article.publishedAt,
-                url: article.url,
-                image: article.urlToImage,
-                score: Math.floor(Math.random() * 30) + 5
-              })));
+            try {
+              const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(q)}&language=en&sortBy=publishedAt&pageSize=3&apiKey=${this.apiKeys.newsapi}`;
+              const res = await fetch(url);
+              const data = await res.json();
+              
+              if (data.articles) {
+                allArticles.push(...data.articles.map((article, i) => ({
+                  id: `${q.replace(/\s+/g, '-')}-${i}-${Date.now()}`,
+                  title: article.title,
+                  desc: article.description || '',
+                  category: this.categorizeNews(q, article.title),
+                  source: article.source.name,
+                  date: article.publishedAt,
+                  url: article.url,
+                  image: article.urlToImage,
+                  score: Math.floor(Math.random() * 35) + 10,
+                  keywords: this.extractKeywords(article.title)
+                })));
+              }
+            } catch (e) {
+              console.warn(`Failed to fetch "${q}":`, e);
             }
           }
           
-          this.news = allArticles.sort((a, b) => new Date(b.date) - new Date(a.date));
-          this.updateStats();
-          this.cacheInfo = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+          this.news = allArticles
+            .filter(n => n.title && n.date)
+            .sort((a, b) => new Date(b.date) - new Date(a.date))
+            .slice(0, 30);
         },
         
-        async fetchFromCryptoPanic() {
-          const url = `https://cryptopanic.com/api/v1/posts/?auth_token=${this.apiKeys.cryptopanic}&kind=news`;
-          const res = await fetch(url);
-          const data = await res.json();
-          
-          this.news = data.results.map((post, i) => ({
-            id: post.id || `cp-${i}`,
-            title: post.title,
-            desc: post.body || '',
-            category: this.categorizeNews(post.currencies?.[0]?.code || '', post.title),
-            source: post.source?.title || 'CryptoPanic',
-            date: post.published_at,
-            url: post.url,
-            image: post.image?.url || null,
-            score: post.votes || 0
-          }));
-          
-          this.updateStats();
-        },
-        
-        categorizeNews(keyword, title) {
-          const text = (keyword + ' ' + title).toLowerCase();
-          if (text.match(/bitcoin|ethereum|crypto|altcoin|defi|nft/)) return 'crypto';
-          if (text.match(/fed|inflation|interest|rate|economy|gdp/)) return 'macro';
-          if (text.match(/sec|regulation|government|policy|law/)) return 'politics';
+        categorizeNews(query, title) {
+          const text = (query + ' ' + title).toLowerCase();
+          if (text.match(/bitcoin|ethereum|crypto|altcoin|defi|nft|solana|layer2/)) return 'crypto';
+          if (text.match(/fed|inflation|interest|rate|economy|gdp|cpi|powell/)) return 'macro';
+          if (text.match(/sec|regulation|government|policy|law|mica|cbdc/)) return 'politics';
+          if (text.match(/ai|nvidia|tech|upgrade|chip|software/)) return 'tech';
           return 'crypto';
         },
         
+        extractKeywords(title) {
+          const words = title.toLowerCase()
+            .replace(/[^\w\s]/g, ' ')
+            .split(' ')
+            .filter(w => w.length > 4 && !['about', 'with', 'from', 'after', 'before', 'under', 'over'].includes(w));
+          return [...new Set(words)].slice(0, 4);
+        },
+        
+        // ===== STATS & FILTERS =====
         updateStats() {
           const now = Date.now();
           const day = 24 * 60 * 60 * 1000;
-          this.stats.total24h = this.news.filter(n => (now - new Date(n.date).getTime()) < day).length;
           
           this.categories.forEach(cat => {
-            if (cat.id !== 'all') {
-              cat.count = this.news.filter(n => n.category === cat.id).length;
-            } else {
+            if (cat.id === 'all') {
               cat.count = this.news.length;
+            } else {
+              cat.count = this.news.filter(n => n.category === cat.id).length;
             }
           });
         },
         
         get filteredNews() {
-          let filtered = this.news;
+          let filtered = [...this.news];
           
           if (this.filters.category !== 'all') {
             filtered = filtered.filter(n => n.category === this.filters.category);
           }
           
-          if (this.filters.search) {
+          if (this.filters.search.trim()) {
             const s = this.filters.search.toLowerCase();
             filtered = filtered.filter(n => 
               n.title.toLowerCase().includes(s) || 
-              (n.desc && n.desc.toLowerCase().includes(s))
+              (n.desc && n.desc.toLowerCase().includes(s)) ||
+              (n.keywords && n.keywords.some(k => k.includes(s)))
             );
           }
           
-          return filtered;
+          return filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
         },
         
         get paginatedNews() {
@@ -598,7 +1106,7 @@
         get trending() {
           return [...this.news]
             .sort((a, b) => b.score - a.score)
-            .slice(0, 3);
+            .slice(0, 9);
         },
         
         get totalPages() {
@@ -617,20 +1125,31 @@
               pages.push('...');
             }
           }
-          
           return pages;
         },
         
+        // ===== HELPERS =====
         getCategoryLabel(cat) {
           const c = this.categories.find(c => c.id === cat);
-          return c ? c.label : 'Todas';
+          return c ? c.label : cat;
+        },
+        
+        getCategoryColors(cat) {
+          const colors = {
+            crypto: 'bg-yellow-600/20 text-yellow-400 border-yellow-600/30',
+            macro: 'bg-blue-600/20 text-blue-400 border-blue-600/30',
+            politics: 'bg-red-600/20 text-red-400 border-red-600/30',
+            tech: 'bg-purple-600/20 text-purple-400 border-purple-600/30'
+          };
+          return colors[cat] || colors.crypto;
         },
         
         getDefaultImage(category) {
           const images = {
-            crypto: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=400',
-            macro: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400',
-            politics: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=400'
+            crypto: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=600&h=400&fit=crop',
+            macro: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&h=400&fit=crop',
+            politics: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600&h=400&fit=crop',
+            tech: 'https://images.unsplash.com/photo-1677442135161-8c2d6c5b5f3e?w=600&h=400&fit=crop'
           };
           return images[category] || images.crypto;
         },
@@ -641,17 +1160,22 @@
           const diff = (now - date) / 1000;
           
           if (diff < 60) return 'Agora';
-          if (diff < 3600) return `${Math.floor(diff/60)}min`;
-          if (diff < 86400) return `${Math.floor(diff/3600)}h`;
-          return `${Math.floor(diff/86400)}d`;
+          if (diff < 3600) return `${Math.floor(diff/60)}min atrás`;
+          if (diff < 86400) return `${Math.floor(diff/3600)}h atrás`;
+          return `${Math.floor(diff/86400)}d atrás`;
         },
         
+        get lastUpdate() {
+          if (!this.lastUpdateTimestamp) return '--:--';
+          return new Date(this.lastUpdateTimestamp).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+        },
+        
+        // ===== SEARCH =====
         searchNews() {
           if (this.filters.search.length < 3) {
             this.searchResults = [];
             return;
           }
-          
           const s = this.filters.search.toLowerCase();
           this.searchResults = this.news.filter(n => 
             n.title.toLowerCase().includes(s) || 
@@ -659,26 +1183,143 @@
           );
         },
         
-        refreshNews(force = false) {
-          this.currentPage = 1;
-          this.fetchNews(force);
+        // ===== AI COPY FUNCTIONS =====
+        updateAISelection() {
+          if (this.selectAllAI) {
+            this.selectedForAI = this.news.map(n => n.id);
+          }
+          this.generatePreview();
         },
         
-        retryFetch() {
-          this.fetchNews(true);
+        generatePreview() {
+          const selected = this.news.filter(n => this.selectedForAI.includes(n.id));
+          if (selected.length === 0) {
+            this.previewText = 'Selecione uma ou mais notícias acima para gerar o preview...';
+            return;
+          }
+          this.previewText = selected.map(n => `• ${n.title}`).join('\n');
         },
         
+        copyFormat(format) {
+          const selected = this.news.filter(n => this.selectedForAI.includes(n.id));
+          if (selected.length === 0) {
+            this.addToast('Selecione pelo menos uma notícia', 'error');
+            return;
+          }
+          
+          let text = '';
+          if (format === 'titles') {
+            text = selected.map(n => `• ${n.title}`).join('\n');
+          } else if (format === 'metadata') {
+            text = selected.map(n => 
+              `📰 ${n.title}\n   Fonte: ${n.source} • ${this.timeAgo(n.date)} • Categoria: ${this.getCategoryLabel(n.category)}`
+            ).join('\n\n');
+          } else if (format === 'prompt') {
+            const topics = selected.map(n => n.title).join('; ');
+            text = `Crie uma imagem profissional e impactante sobre tendências financeiras e criptomoedas. Contexto: ${topics}. Estilo: futurista, tecnológico, cores vibrantes, alta qualidade, 8k.`;
+          }
+          
+          navigator.clipboard.writeText(text);
+          this.addToast(`✅ Formato "${format}" copiado!`, 'success');
+          this.previewText = text;
+        },
+        
+        copyPreview() {
+          if (!this.previewText || this.previewText.includes('Selecione')) {
+            this.addToast('Nada para copiar ainda', 'error');
+            return;
+          }
+          navigator.clipboard.writeText(this.previewText);
+          this.addToast('✅ Preview copiado!', 'success');
+        },
+        
+        // ===== PERSISTENCE =====
+        loadKeys() {
+          const saved = localStorage.getItem('cryptoNewsKeys');
+          if (saved) {
+            this.apiKeys = JSON.parse(saved);
+            this.hasValidKeys = !!this.apiKeys.newsapi;
+          }
+        },
+        
+        saveKeys() {
+          if (!this.apiKeys.newsapi) {
+            this.addToast('Insira uma API key válida', 'error');
+            return;
+          }
+          localStorage.setItem('cryptoNewsKeys', JSON.stringify(this.apiKeys));
+          this.hasValidKeys = true;
+          this.demoMode = false;
+          this.addToast('API configurada! Atualizando notícias...', 'success');
+          this.fetchNews();
+        },
+        
+        enableDemoMode() {
+          this.demoMode = true;
+          this.hasValidKeys = true;
+          this.loadDemoData();
+          this.updateStats();
+          this.scheduleNextUpdate();
+          this.addToast('Modo Demo ativado • BTC ~$78.000', 'success');
+        },
+        
+        loadFromCache() {
+          try {
+            const cached = localStorage.getItem('cryptoNewsCache');
+            if (cached) {
+              const { news, timestamp } = JSON.parse(cached);
+              const age = Date.now() - timestamp;
+              if (age < 15 * 60 * 1000) { // 15 min
+                this.news = news;
+                this.lastUpdateTimestamp = timestamp;
+                this.nextUpdateTimestamp = timestamp + (15 * 60 * 1000);
+                this.cacheInfo = new Date(timestamp).toLocaleTimeString('pt-BR');
+                this.updateStats();
+              }
+            }
+          } catch(e) { console.warn('Cache load failed', e); }
+        },
+        
+        saveToCache() {
+          try {
+            localStorage.setItem('cryptoNewsCache', JSON.stringify({
+              news: this.news,
+              timestamp: Date.now()
+            }));
+          } catch(e) { console.warn('Cache save failed', e); }
+        },
+        
+        // ===== UI =====
         toggleTheme() {
           this.isDark = !this.isDark;
           document.documentElement.classList.toggle('dark');
         },
         
-        copyHeadlines() {
-          const text = this.news.slice(0, 20).map(n => n.title).join('\n');
-          navigator.clipboard.writeText(text);
-          alert('Manchetes copiadas!');
+        // ===== TOASTS =====
+        addToast(message, type = 'info') {
+          const id = ++this.toastId;
+          this.toasts.push({ id, message, type });
+          setTimeout(() => this.removeToast(id), 4000);
+        },
+        
+        removeToast(id) {
+          this.toasts = this.toasts.filter(t => t.id !== id);
+        },
+        
+        // ===== PRICE SIMULATION (demo) =====
+        startPriceSimulation() {
+          setInterval(() => {
+            if (this.demoMode) {
+              this.btcPrice += (Math.random() - 0.5) * 50;
+              this.btcChange += (Math.random() - 0.5) * 0.3;
+              this.ethPrice += (Math.random() - 0.5) * 20;
+              // Keep within realistic bounds
+              this.btcPrice = Math.max(75000, Math.min(82000, this.btcPrice));
+              this.btcChange = Math.max(-5, Math.min(8, this.btcChange));
+            }
+          }, 30000); // Update every 30s in demo
         }
-      }
+      };
     }
   </script>
 </body>
