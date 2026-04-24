@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CryptoNews Pro • Notícias dos 6 Portais Oficiais</title>
+  <title>CryptoNews Pro • Agregador Financeiro & Jornais BR</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -50,13 +50,24 @@
     .fng-neutral { background: linear-gradient(135deg, #ca8a04, #eab308); }
     .fng-greed { background: linear-gradient(135deg, #166534, #22c55e); }
     .fng-extreme-greed { background: linear-gradient(135deg, #14532d, #16a34a); }
-    .source-badge { font-size: 10px; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
-    .source-coindesk { background: #0057ff20; color: #60a5fa; border: 1px solid #0057ff40; }
-    .source-cointelegraph { background: #ff6b0020; color: #fbbf24; border: 1px solid #ff6b0040; }
-    .source-bitcoinmag { background: #f7931a20; color: #fcd34d; border: 1px solid #f7931a40; }
-    .source-cointelegraphbr { background: #ff6b0020; color: #fbbf24; border: 1px solid #ff6b0040; }
-    .source-portaldobitcoin { background: #16a34a20; color: #4ade80; border: 1px solid #16a34a40; }
-    .source-livecoins { background: #8b5cf620; color: #a78bfa; border: 1px solid #8b5cf640; }
+    
+    /* Journal Badges */
+    .jornal-badge { font-size: 10px; padding: 2px 8px; border-radius: 999px; font-weight: 600; white-space: nowrap; }
+    .jornal-g1 { background: #e11d4820; color: #f87171; border: 1px solid #e11d4840; }
+    .jornal-folha { background: #16a34a20; color: #4ade80; border: 1px solid #16a34a40; }
+    .jornal-estadao { background: #0ea5e920; color: #38bdf8; border: 1px solid #0ea5e940; }
+    .jornal-oglobo { background: #8b5cf620; color: #a78bfa; border: 1px solid #8b5cf640; }
+    .jornal-bbc { background: #ef444420; color: #fca5a5; border: 1px solid #ef444440; }
+    .jornal-banda { background: #f59e0b20; color: #fbbf24; border: 1px solid #f59e0b40; }
+    .jornal-valor { background: #06b6d420; color: #22d3ee; border: 1px solid #06b6d440; }
+    .jornal-carta { background: #a855f720; color: #c084fc; border: 1px solid #a855f740; }
+    .jornal-247 { background: #dc262620; color: #f87171; border: 1px solid #dc262640; }
+    .jornal-defato { background: #15803d20; color: #86efac; border: 1px solid #15803d40; }
+    .jornal-metro { background: #4f46e520; color: #818cf8; border: 1px solid #4f46e540; }
+    .jornal-correio { background: #0d948820; color: #5eead4; border: 1px solid #0d948840; }
+    .jornal-atarde { background: #ea580c20; color: #fb923c; border: 1px solid #ea580c40; }
+    .jornal-exame { background: #f43f5e20; color: #fb7185; border: 1px solid #f43f5e40; }
+    .jornal-veja { background: #ca8a0420; color: #fbbf24; border: 1px solid #ca8a0440; }
   </style>
 </head>
 
@@ -139,29 +150,35 @@
             <span class="hidden sm:inline font-semibold" x-text="isUpdating ? 'Atualizando...' : 'Atualizar Agora'"></span>
           </button>
           
-          <!-- View Toggle -->
+          <!-- View Toggle (4 Tabs) -->
           <div class="flex items-center bg-gray-800 rounded-lg p-0.5 border border-gray-700">
             <button @click="view = 'feed'"
-                    class="px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1"
+                    class="px-2.5 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1"
                     :class="view === 'feed' ? 'bg-blue-600 text-white shadow' : 'text-gray-400 hover:text-gray-200'">
               <i class="ph-bold ph-newspaper"></i>
-              <span class="hidden sm:inline">Feed</span>
+              <span class="hidden sm:inline">Cripto</span>
             </button>
             <button @click="view = 'trending'"
-                    class="px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1"
+                    class="px-2.5 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1"
                     :class="view === 'trending' ? 'bg-orange-600 text-white shadow' : 'text-gray-400 hover:text-gray-200'">
               <i class="ph-bold ph-fire"></i>
-              <span class="hidden sm:inline">Em Alta</span>
+              <span class="hidden sm:inline">Alta</span>
+            </button>
+            <button @click="view = 'jornais'; fetchJornaisList()"
+                    class="px-2.5 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1"
+                    :class="view === 'jornais' ? 'bg-emerald-600 text-white shadow' : 'text-gray-400 hover:text-gray-200'">
+              <i class="ph-bold ph-bank"></i>
+              <span class="hidden sm:inline">Jornais BR</span>
             </button>
             <button @click="view = 'ai-copy'"
-                    class="px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1"
+                    class="px-2.5 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1"
                     :class="view === 'ai-copy' ? 'bg-purple-600 text-white shadow' : 'text-gray-400 hover:text-gray-200'">
               <i class="ph-bold ph-robot"></i>
-              <span class="hidden sm:inline">Copiar p/ IA</span>
+              <span class="hidden sm:inline">IA</span>
             </button>
           </div>
           
-          <!-- Auto-refresh Timer (1 HOUR) -->
+          <!-- Auto-refresh Timer -->
           <div class="hidden lg:flex items-center gap-1.5 px-3 py-2 text-xs text-gray-500 bg-gray-800/50 rounded-lg border border-gray-700">
             <i class="ph-bold ph-timer"></i>
             <span>Próxima: </span>
@@ -176,8 +193,8 @@
         </div>
       </div>
 
-      <!-- Source Badges Bar -->
-      <div class="flex gap-2 mt-4 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4">
+      <!-- Source Badges Bar (Crypto) -->
+      <div x-show="view === 'feed'" class="flex gap-2 mt-4 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4">
         <template x-for="source in newsSources" :key="source.id">
           <span class="source-badge" :class="source.badgeClass" x-text="source.label"></span>
         </template>
@@ -193,7 +210,7 @@
           <i class="ph-bold ph-magnifying-glass text-gray-400 text-lg"></i>
           <input type="text" x-model="filters.search" @input.debounce.300ms="searchNews()" 
                  class="flex-1 bg-transparent outline-none text-white placeholder-gray-500 text-base"
-                 placeholder="Bitcoin, ETF, Fed, Ethereum, halving..." autofocus>
+                 placeholder="Bitcoin, ETF, Fed, Lula, economia..." autofocus>
           <button @click="showSearch = false; filters.search = ''" class="text-gray-400 hover:text-white transition">
             <i class="ph-bold ph-x text-lg"></i>
           </button>
@@ -210,7 +227,7 @@
                   <div class="flex-1 min-w-0">
                     <h4 class="text-sm font-medium text-gray-100 group-hover:text-blue-400 transition line-clamp-2" x-text="item.title"></h4>
                     <div class="flex items-center gap-2 mt-1.5 text-xs text-gray-500">
-                      <span class="source-badge" :class="getSourceBadgeClass(item.source)" x-text="getShortSource(item.source)"></span>
+                      <span class="jornal-badge" :class="item.jornalBadge || getSourceBadgeClass(item.source)" x-text="item.jornalShort || getShortSource(item.source)"></span>
                       <span>•</span>
                       <span x-text="timeAgo(item.date)"></span>
                     </div>
@@ -256,15 +273,14 @@
     </div>
 
     <!-- Loading State -->
-    <div x-show="isUpdating && news.length === 0" class="flex flex-col items-center justify-center py-24">
+    <div x-show="isUpdating && news.length === 0 && !jornaisLoading" class="flex flex-col items-center justify-center py-24">
       <div class="relative">
         <div class="w-20 h-20 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
         <div class="absolute inset-0 flex items-center justify-center">
           <i class="ph-bold ph-arrows-clockwise text-blue-500 text-xl animate-pulse"></i>
         </div>
       </div>
-      <p class="mt-5 text-gray-300 font-medium">Buscando notícias dos 6 portais...</p>
-      <p class="text-xs text-gray-500 mt-2">CoinDesk • CoinTelegraph • Bitcoin Magazine • CoinTelegraph BR • Portal do Bitcoin • Livecoins</p>
+      <p class="mt-5 text-gray-300 font-medium">Buscando notícias...</p>
     </div>
 
     <!-- Error State -->
@@ -284,11 +300,12 @@
         <h2 class="text-lg font-semibold flex items-center gap-2">
           <span x-show="view === 'feed'">📰</span>
           <span x-show="view === 'trending'">🔥</span>
+          <span x-show="view === 'jornais'">🏛</span>
           <span x-show="view === 'ai-copy'">🤖</span>
-          <span x-text="view === 'feed' ? 'Feed de Notícias' : view === 'trending' ? 'Em Alta Agora' : 'Copiar para IA'"></span>
+          <span x-text="view === 'feed' ? 'Feed Cripto' : view === 'trending' ? 'Em Alta' : view === 'jornais' ? (selectedJornal ? selectedJornal.label : 'Jornais do Brasil') : 'Copiar IA'"></span>
         </h2>
         <span class="px-2.5 py-1 bg-gray-800 rounded-full text-xs text-gray-400 border border-gray-700"
-              x-text="`${filteredNews.length} notícias`"></span>
+              x-text="`${(view === 'jornais' ? jornaisNews : filteredNews).length} notícias`"></span>
       </div>
       <div class="flex items-center gap-2 text-xs text-gray-500">
         <span>Última atualização:</span>
@@ -296,10 +313,8 @@
       </div>
     </div>
 
-    <!-- ================= VIEW: FEED ================= -->
+    <!-- ================= VIEW: CRYPTO FEED ================= -->
     <div x-show="view === 'feed'" x-cloak class="space-y-4">
-      
-      <!-- Trending Mini-Bar -->
       <div x-show="trending.length > 0" class="p-4 bg-gradient-to-r from-orange-900/20 to-red-900/20 border border-orange-500/20 rounded-xl">
         <div class="flex items-center gap-2 mb-3">
           <i class="ph-fill ph-fire text-orange-500 animate-pulse"></i>
@@ -317,7 +332,6 @@
         </div>
       </div>
 
-      <!-- News Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <template x-for="item in paginatedNews" :key="item.id">
           <article class="group bg-gray-900/40 border border-gray-800 rounded-2xl overflow-hidden hover:border-blue-500/40 hover:bg-gray-800/40 transition-all duration-300 fade-in cursor-pointer"
@@ -369,7 +383,6 @@
         </template>
       </div>
 
-      <!-- Pagination -->
       <div x-show="totalPages > 1" class="flex items-center justify-center gap-1.5 mt-8 pt-6 border-t border-gray-800">
         <button @click="currentPage--" :disabled="currentPage === 1" class="px-3.5 py-2 rounded-lg bg-gray-800 disabled:opacity-40 hover:bg-gray-700 transition">
           <i class="ph-bold ph-caret-left"></i>
@@ -386,11 +399,9 @@
         </button>
       </div>
 
-      <!-- Empty State -->
       <div x-show="!isUpdating && filteredNews.length === 0" class="text-center py-20 text-gray-500 animate-fade-in">
         <i class="ph-duotone ph-newspaper-clipping text-6xl mb-4 text-gray-700"></i>
         <p class="text-lg font-medium text-gray-400 mb-2">Nenhuma notícia encontrada</p>
-        <p class="text-sm mb-4">Verifique sua conexão ou tente atualizar manualmente</p>
         <button @click="refreshManual()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition flex items-center gap-2">
           <i class="ph-bold ph-arrows-clockwise"></i> Atualizar Agora
         </button>
@@ -422,6 +433,97 @@
       </div>
     </div>
 
+    <!-- ================= VIEW: JORNAIS DO BRASIL ================= -->
+    <div x-show="view === 'jornais'" x-cloak class="space-y-4">
+      
+      <!-- Lista de Jornais (Seleção) -->
+      <div x-show="!selectedJornal" class="animate-fade-in">
+        <div class="p-4 bg-emerald-900/20 border border-emerald-700/50 rounded-xl mb-6">
+          <h3 class="font-semibold text-emerald-100 flex items-center gap-2">
+            <i class="ph-bold ph-bank"></i> Selecione um Jornal
+          </h3>
+          <p class="text-sm text-emerald-200/80 mt-1">Clique em um dos portais abaixo para carregar as notícias em tempo real.</p>
+        </div>
+        
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          <template x-for="jornal in jornaisSources" :key="jornal.id">
+            <button @click="loadJornalFeed(jornal)"
+                    class="group p-4 bg-gray-900 border border-gray-800 rounded-xl hover:border-emerald-500/50 hover:bg-gray-800/50 transition-all flex flex-col items-center text-center gap-3">
+              <div class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white"
+                   :class="getJornalBadgeClass(jornal)">
+                <span x-text="jornal.short"></span>
+              </div>
+              <span class="text-sm font-medium text-gray-200 group-hover:text-emerald-400 transition" x-text="jornal.label"></span>
+              <span class="text-[10px] text-gray-500" x-text="jornal.domain"></span>
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <!-- Feed do Jornal Selecionado -->
+      <div x-show="selectedJornal" class="animate-fade-in">
+        <div class="flex items-center justify-between mb-4">
+          <button @click="selectedJornal = null; jornaisNews = []" 
+                  class="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm font-medium transition">
+            <i class="ph-bold ph-arrow-left"></i>
+            Voltar para lista
+          </button>
+          <span class="jornal-badge px-3 py-1.5 text-sm" :class="getJornalBadgeClass(selectedJornal)" x-text="selectedJornal.label"></span>
+        </div>
+
+        <!-- Loading Journals -->
+        <div x-show="jornaisLoading && jornaisNews.length === 0" class="flex flex-col items-center justify-center py-16">
+          <div class="w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mb-4"></div>
+          <p class="text-gray-400">Carregando notícias do <span class="text-emerald-400 font-medium" x-text="selectedJornal?.label"></span>...</p>
+        </div>
+
+        <!-- Journals Grid -->
+        <div x-show="!jornaisLoading" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <template x-for="item in jornaisNews" :key="item.id">
+            <article class="group bg-gray-900/40 border border-gray-800 rounded-2xl overflow-hidden hover:border-emerald-500/40 hover:bg-gray-800/40 transition-all duration-300 fade-in cursor-pointer"
+                     @click="window.open(item.url, '_blank', 'noopener')">
+              <div class="flex flex-col sm:flex-row">
+                <div class="w-full sm:w-56 h-44 relative shrink-0 bg-gray-800">
+                  <img :src="item.image || getDefaultImage('crypto')" 
+                       class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                       @error="$el.parentElement.innerHTML = '<div class=\'w-full h-full flex flex-col items-center justify-center bg-gray-800 text-gray-500\'><i class=\'ph-bold ph-image text-2xl mb-1\'></i><span class=\'text-xs\'>Sem imagem</span></div>'">
+                  <div class="absolute top-3 left-3">
+                    <span class="jornal-badge" :class="getJornalBadgeClass(selectedJornal)" x-text="selectedJornal.short"></span>
+                  </div>
+                </div>
+                <div class="p-4 sm:p-5 flex flex-col justify-between flex-1 min-w-0">
+                  <div>
+                    <div class="flex items-center gap-2 mb-3">
+                      <span class="text-gray-500 text-xs flex items-center gap-1">
+                        <i class="ph ph-clock"></i>
+                        <span x-text="timeAgo(item.date)"></span>
+                      </span>
+                    </div>
+                    <h3 class="text-base sm:text-lg font-bold text-gray-100 group-hover:text-emerald-400 transition-colors mb-2 leading-snug line-clamp-2" x-text="item.title"></h3>
+                    <p x-show="item.desc" class="text-sm text-gray-400 line-clamp-2 mb-4" x-text="item.desc"></p>
+                  </div>
+                  <div class="flex items-center justify-between pt-3 border-t border-gray-800/50">
+                    <span class="text-xs text-emerald-500 font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      Ler original <i class="ph-bold ph-arrow-right"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </template>
+        </div>
+
+        <!-- Empty Journals -->
+        <div x-show="!jornaisLoading && jornaisNews.length === 0" class="text-center py-16 text-gray-500">
+          <i class="ph-duotone ph-newspaper-clipping text-5xl mb-3 text-gray-700"></i>
+          <p class="text-gray-400">Nenhuma notícia encontrada para este jornal</p>
+          <button @click="loadJornalFeed(selectedJornal)" class="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-medium transition">
+            Tentar novamente
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- ================= VIEW: AI COPY ================= -->
     <div x-show="view === 'ai-copy'" x-cloak class="max-w-5xl mx-auto">
       <div class="mb-6 p-5 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/30 rounded-2xl">
@@ -431,7 +533,7 @@
               <i class="ph-bold ph-robot text-purple-400"></i>
               Copiar Notícias para IA Generativa
             </h2>
-            <p class="text-sm text-gray-400">Selecione notícias dos 6 portais e copie no formato ideal para Midjourney, DALL-E 3, ChatGPT ou Claude</p>
+            <p class="text-sm text-gray-400">Selecione notícias e copie no formato ideal para Midjourney, DALL-E 3, ChatGPT ou Claude</p>
           </div>
           <div class="flex gap-2">
             <button @click="selectAllAI = !selectAllAI; updateAISelection()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm font-medium transition border border-gray-700">
@@ -487,10 +589,11 @@
 
   </main>
 
-  <!-- Footer with Source Info -->
+  <!-- Footer -->
   <footer class="border-t border-gray-800 py-4 mt-auto">
     <div class="max-w-7xl mx-auto px-4 text-center text-xs text-gray-600">
-      <p>Fontes oficiais: CoinDesk • CoinTelegraph • Bitcoin Magazine • CoinTelegraph BR • Portal do Bitcoin • Livecoins</p>
+      <p>Cripto: CoinDesk • CoinTelegraph • Bitcoin Magazine • CoinTelegraph BR • Portal do Bitcoin • Livecoins</p>
+      <p>Jornais: G1 • Folha • Estadão • O Globo • BBC • Band • Valor • Carta • 247 • Defato • Metrópoles • Correio • A Tarde • Exame • Veja</p>
       <p class="mt-1">Atualização automática a cada 1 hora • Preços via CoinGecko • Sentimento via Alternative.me</p>
     </div>
   </footer>
@@ -499,7 +602,7 @@
   <script>
     function cryptoNewsApp() {
       return {
-        // ===== STATE =====
+        // ===== STATE (EXISTING) =====
         view: 'feed',
         isUpdating: false,
         error: null,
@@ -509,18 +612,13 @@
         autoRefreshInterval: null,
         nextUpdateTimestamp: null,
         lastUpdateTimestamp: null,
-        
-        // REAL prices from CoinGecko
         btcPrice: 0, btcChange: 0, ethPrice: 0, ethChange: 0,
         btcFlash: null, ethFlash: null,
-        
-        // Fear & Greed Index
         fngData: null,
-        
         currentPage: 1, itemsPerPage: 12,
         filters: { category: 'all', search: '' },
         
-        // The 6 OFFICIAL sources
+        // 6 Crypto Sources
         newsSources: [
           { id: 'coindesk', label: 'CoinDesk', domain: 'coindesk.com', rss: 'https://www.coindesk.com/arc/outboundfeeds/rss/', badgeClass: 'source-coindesk' },
           { id: 'cointelegraph', label: 'CoinTelegraph', domain: 'cointelegraph.com', rss: 'https://cointelegraph.com/rss', badgeClass: 'source-cointelegraph' },
@@ -540,27 +638,52 @@
         
         news: [], searchResults: [], cacheInfo: '--',
         connectionStatus: 'online',
-        
-        // AI Copy
         selectedForAI: [], selectAllAI: false, previewText: '',
-        
-        // Toasts
         toasts: [], toastId: 0,
         
+        // ===== STATE (NEW - JORNAIS) =====
+        jornaisView: 'lista',
+        selectedJornal: null,
+        jornaisNews: [],
+        jornaisLoading: false,
+        jornaisAutoRefresh: null,
+        
+        jornaisSources: [
+          { id: 'g1', label: 'G1', short: 'G1', domain: 'g1.globo.com', rss: 'https://feeds.g1.globo.com/g1/rss/', badgeClass: 'jornal-g1' },
+          { id: 'folha', label: 'Folha de S.Paulo', short: 'FSP', domain: 'folha.uol.com.br', rss: 'https://feeds.folha.uol.com.br/folha/rss091.xml', badgeClass: 'jornal-folha' },
+          { id: 'estadao', label: 'Estadão', short: 'EST', domain: 'estadao.com.br', rss: 'https://feeds.estadao.com.br/estadao/rss/', badgeClass: 'jornal-estadao' },
+          { id: 'oglobo', label: 'O Globo', short: 'OG', domain: 'oglobo.globo.com', rss: 'https://oglobo.globo.com/rss/', badgeClass: 'jornal-oglobo' },
+          { id: 'bbc', label: 'BBC Brasil', short: 'BBC', domain: 'bbc.com/portuguese', rss: 'https://feeds.bbci.co.uk/portuguese/rss.xml', badgeClass: 'jornal-bbc' },
+          { id: 'banda', label: 'Band News', short: 'BN', domain: 'bandnews.com.br', rss: 'https://www.bandnews.com.br/rss/', badgeClass: 'jornal-banda' },
+          { id: 'valor', label: 'Valor Econômico', short: 'VAL', domain: 'valor.globo.com', rss: 'https://valor.globo.com/feed/rss/', badgeClass: 'jornal-valor' },
+          { id: 'carta', label: 'CartaCapital', short: 'CC', domain: 'cartacapital.com.br', rss: 'https://www.cartacapital.com.br/feed/', badgeClass: 'jornal-carta' },
+          { id: '247', label: 'Brasil 247', short: '247', domain: 'brasil247.com', rss: 'https://www.brasil247.com/rss', badgeClass: 'jornal-247' },
+          { id: 'defato', label: 'Brasil de Fato', short: 'BDF', domain: 'brasildefato.com.br', rss: 'https://www.brasildefato.com.br/feed/', badgeClass: 'jornal-defato' },
+          { id: 'metro', label: 'Metrópoles', short: 'MET', domain: 'metropoles.com', rss: 'https://www.metropoles.com/feed', badgeClass: 'jornal-metro' },
+          { id: 'correio', label: 'Correio Braziliense', short: 'CB', domain: 'correiobraziliense.com.br', rss: 'https://www.correiobraziliense.com.br/rss/', badgeClass: 'jornal-correio' },
+          { id: 'atarde', label: 'A Tarde', short: 'AT', domain: 'atarde.com.br', rss: 'https://atarde.com.br/feed/', badgeClass: 'jornal-atarde' },
+          { id: 'exame', label: 'Exame', short: 'EX', domain: 'exame.com', rss: 'https://exame.com/feed/', badgeClass: 'jornal-exame' },
+          { id: 'veja', label: 'Veja', short: 'VJ', domain: 'veja.abril.com.br', rss: 'https://veja.abril.com.br/feed/', badgeClass: 'jornal-veja' }
+        ],
+
         // ===== INIT =====
         init() {
           this.loadFromCache();
           this.fetchPrices();
           this.fetchFearGreed();
           this.fetchNewsFromSixPortals();
-          this.startAutoRefresh(); // 1 HOUR
+          this.startAutoRefresh();
           this.updateNextUpdateDisplay();
           setInterval(() => this.updateNextUpdateDisplay(), 1000);
-          setInterval(() => this.fetchPrices(), 60000); // prices every 60s
-          setInterval(() => this.fetchFearGreed(), 3600000); // FNG every hour
+          setInterval(() => this.fetchPrices(), 60000);
+          setInterval(() => this.fetchFearGreed(), 3600000);
+          // Journals auto-refresh every 1 hour
+          this.jornaisAutoRefresh = setInterval(() => {
+            if(this.selectedJornal) this.loadJornalFeed(this.selectedJornal);
+          }, 3600000);
         },
         
-        // ===== FETCH REAL PRICES FROM COINGECKO =====
+        // ===== PRICES & F&G (EXISTING) =====
         async fetchPrices() {
           try {
             const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true');
@@ -575,7 +698,6 @@
           } catch (error) { console.error('Error fetching prices:', error); }
         },
         
-        // ===== FEAR & GREED INDEX =====
         async fetchFearGreed() {
           try {
             const response = await fetch('https://api.alternative.me/fng/');
@@ -592,9 +714,9 @@
           return 'fng-extreme-greed';
         },
         
-        // ===== AUTO-REFRESH (1 HOUR = 3600000ms) =====
+        // ===== AUTO-REFRESH (1 HOUR) =====
         startAutoRefresh() {
-          const ONE_HOUR = 60 * 60 * 1000; // 3600000ms
+          const ONE_HOUR = 60 * 60 * 1000;
           this.autoRefreshInterval = setInterval(() => { this.refreshManual(); }, ONE_HOUR);
         },
         
@@ -607,13 +729,13 @@
           this.nextUpdate = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
         },
         
-        // ===== MANUAL REFRESH BUTTON =====
+        // ===== MANUAL REFRESH =====
         async refreshManual() {
           if (this.isUpdating) return;
           this.isUpdating = true;
           this.connectionStatus = 'Atualizando...';
           this.error = null;
-          this.addToast('Buscando notícias dos 6 portais...', 'info');
+          this.addToast('Buscando notícias...', 'info');
           
           try {
             await this.fetchPrices();
@@ -633,24 +755,21 @@
         },
         
         scheduleNextUpdate() {
-          this.nextUpdateTimestamp = Date.now() + (60 * 60 * 1000); // 1 hour
+          this.nextUpdateTimestamp = Date.now() + (60 * 60 * 1000);
           this.lastUpdateTimestamp = Date.now();
           this.updateNextUpdateDisplay();
           this.cacheInfo = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
           this.saveToCache();
         },
         
-        // ===== FETCH NEWS FROM THE 6 OFFICIAL PORTALS =====
+        // ===== CRYPTO NEWS FETCH (EXISTING) =====
         async fetchNewsFromSixPortals() {
           let allNews = [];
-          
           for (const source of this.newsSources) {
             try {
-              // Use rss2json.com as CORS-friendly RSS parser (free, no key)
               const rssUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(source.rss)}`;
               const res = await fetch(rssUrl);
               const data = await res.json();
-              
               if (data.status === 'ok' && data.items) {
                 const sourceNews = data.items.map((item, i) => ({
                   id: `${source.id}-${item.guid || i}-${Date.now()}`,
@@ -663,65 +782,40 @@
                   url: item.link,
                   image: item.thumbnail || item.image || this.getDefaultImage('crypto'),
                   keywords: this.extractKeywords(item.title),
-                  // Real engagement metrics from RSS (if available)
-                  engagement: { views: Math.floor(Math.random() * 1000), shares: Math.floor(Math.random() * 100) }
+                  score: this.calculateRealScore({ title: item.title, desc: item.description, date: item.pubDate, source: source.label })
                 }));
                 allNews.push(...sourceNews);
               }
-            } catch (e) {
-              console.warn(`Failed to fetch ${source.label}:`, e);
-            }
+            } catch (e) { console.warn(`Failed to fetch ${source.label}:`, e); }
           }
-          
-          if (allNews.length === 0) {
-            this.loadDemoData(); // Fallback
-          } else {
-            // Calculate REAL trending scores
-            this.news = allNews.map(item => ({
-              ...item,
-              score: this.calculateRealScore(item)
-            })).sort((a, b) => b.score - a.score).slice(0, 60);
-          }
+          if (allNews.length === 0) { this.loadDemoData(); }
+          else { this.news = allNews.sort((a, b) => b.score - a.score).slice(0, 60); }
         },
         
-        // ===== REAL TRENDING SCORE CALCULATION =====
         calculateRealScore(item) {
-          let score = 10; // base score
-          
-          // Recency bonus (newer = higher)
+          let score = 10;
           const hoursOld = (Date.now() - new Date(item.date).getTime()) / 3600000;
           if (hoursOld < 1) score += 25;
           else if (hoursOld < 3) score += 15;
           else if (hoursOld < 6) score += 8;
           else if (hoursOld < 12) score += 3;
-          
-          // Hot keywords bonus (ETF, Fed, BlackRock, halving, etc.)
           const hotKeywords = ['etf', 'fed', 'blackrock', 'sec', 'regulation', 'adoption', 'institutional', 'bull', 'ath', 'halving', 'breakout', 'surge', 'record'];
-          const text = (item.title + ' ' + item.desc).toLowerCase();
+          const text = (item.title + ' ' + (item.desc || '')).toLowerCase();
           hotKeywords.forEach(kw => { if (text.includes(kw)) score += 4; });
-          
-          // Source credibility bonus
           const premiumSources = ['CoinDesk', 'CoinTelegraph', 'Bitcoin Magazine'];
           if (premiumSources.includes(item.source)) score += 5;
-          
-          // Engagement simulation (based on RSS position)
           score += Math.floor(Math.random() * 10);
-          
           return Math.max(5, Math.round(score));
         },
         
-        // ===== DEMO DATA (fallback) =====
         loadDemoData() {
           const now = Date.now();
           const btc = this.btcPrice > 0 ? this.btcPrice : 78000;
           const eth = this.ethPrice > 0 ? this.ethPrice : 2300;
-          
           this.news = [
-            { id: 'demo-1', title: `Bitcoin negocia a $${btc.toLocaleString('en-US')} com alta volatilidade`, desc: 'Mercado de criptomoedas reage às declarações do Federal Reserve sobre política monetária.', category: 'crypto', source: 'CoinDesk', sourceDomain: 'coindesk.com', date: new Date(now - 30 * 60 * 1000).toISOString(), url: 'https://coindesk.com', image: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=600&h=400&fit=crop', score: 45, keywords: ['bitcoin', 'mercado'] },
-            { id: 'demo-2', title: `Ethereum em $${eth.toLocaleString('en-US')} enquanto rede processa recorde`, desc: 'Camada principal do Ethereum bate novo recorde de transações diárias.', category: 'crypto', source: 'CoinTelegraph', sourceDomain: 'cointelegraph.com', date: new Date(now - 45 * 60 * 1000).toISOString(), url: 'https://cointelegraph.com', image: 'https://images.unsplash.com/photo-1622630998477-20aa696fa405?w=600&h=400&fit=crop', score: 32, keywords: ['ethereum', 'transacoes'] },
-            { id: 'demo-3', title: 'Fed mantém juros inalterados; Powell sinaliza cautela', desc: 'Mercados reagem às declarações do presidente do Federal Reserve.', category: 'macro', source: 'Bitcoin Magazine', sourceDomain: 'bitcoinmagazine.com', date: new Date(now - 90 * 60 * 1000).toISOString(), url: 'https://bitcoinmagazine.com', image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&h=400&fit=crop', score: 38, keywords: ['fed', 'juros'] },
-            { id: 'demo-4', title: 'Portal do Bitcoin: Análise técnica aponta resistência em $80k', desc: 'Especialistas avaliam cenário para Bitcoin nas próximas semanas.', category: 'crypto', source: 'Portal do Bitcoin', sourceDomain: 'portaldobitcoin.uol.com.br', date: new Date(now - 2 * 60 * 60 * 1000).toISOString(), url: 'https://portaldobitcoin.uol.com.br', image: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=600&h=400&fit=crop', score: 28, keywords: ['analise', 'resistencia'] },
-            { id: 'demo-5', title: 'Livecoins: Institucionais aumentam exposição a cripto em 40%', desc: 'Relatório mostra crescimento da adoção institucional no Brasil.', category: 'crypto', source: 'Livecoins', sourceDomain: 'livecoins.com.br', date: new Date(now - 3 * 60 * 60 * 1000).toISOString(), url: 'https://livecoins.com.br', image: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=600&h=400&fit=crop', score: 40, keywords: ['institucional', 'brasil'] }
+            { id: 'demo-1', title: `Bitcoin negocia a $${btc.toLocaleString('en-US')} com alta volatilidade`, desc: 'Mercado de criptomoedas reage às declarações do Federal Reserve.', category: 'crypto', source: 'CoinDesk', sourceDomain: 'coindesk.com', date: new Date(now - 30 * 60 * 1000).toISOString(), url: 'https://coindesk.com', image: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=600&h=400&fit=crop', score: 45, keywords: ['bitcoin', 'mercado'] },
+            { id: 'demo-2', title: `Ethereum em $${eth.toLocaleString('en-US')} enquanto rede processa recorde`, desc: 'Camada principal do Ethereum bate novo recorde de transações.', category: 'crypto', source: 'CoinTelegraph', sourceDomain: 'cointelegraph.com', date: new Date(now - 45 * 60 * 1000).toISOString(), url: 'https://cointelegraph.com', image: 'https://images.unsplash.com/photo-1622630998477-20aa696fa405?w=600&h=400&fit=crop', score: 32, keywords: ['ethereum', 'transacoes'] },
+            { id: 'demo-3', title: 'Fed mantém juros inalterados; Powell sinaliza cautela', desc: 'Mercados reagem às declarações do presidente do Federal Reserve.', category: 'macro', source: 'Bitcoin Magazine', sourceDomain: 'bitcoinmagazine.com', date: new Date(now - 90 * 60 * 1000).toISOString(), url: 'https://bitcoinmagazine.com', image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&h=400&fit=crop', score: 38, keywords: ['fed', 'juros'] }
           ];
           this.connectionStatus = 'online (demo)';
         },
@@ -740,7 +834,55 @@
           return [...new Set(words)].slice(0, 4);
         },
         
-        // ===== STATS & FILTERS =====
+        // ===== JOURNALS FUNCTIONS (NEW) =====
+        fetchJornaisList() {
+          // Just ensures view is set, actual loading happens on click
+          this.jornaisView = 'lista';
+          this.selectedJornal = null;
+        },
+        
+        async loadJornalFeed(jornal) {
+          this.selectedJornal = jornal;
+          this.jornaisLoading = true;
+          this.jornaisNews = [];
+          
+          try {
+            const rssUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(jornal.rss)}`;
+            const res = await fetch(rssUrl);
+            const data = await res.json();
+            
+            if (data.status === 'ok' && data.items) {
+              this.jornaisNews = data.items.map((item, i) => ({
+                id: `${jornal.id}-${item.guid || i}-${Date.now()}`,
+                title: item.title,
+                desc: item.description?.replace(/<[^>]*>/g, '').substring(0, 200) || '',
+                date: item.pubDate,
+                url: item.link,
+                image: item.thumbnail || item.image || this.getDefaultImage('crypto'),
+                source: jornal.label,
+                jornalBadge: jornal.badgeClass,
+                jornalShort: jornal.short
+              })).slice(0, 20);
+              
+              this.addToast(`✅ ${this.jornaisNews.length} notícias de ${jornal.label}`, 'success');
+            } else {
+              throw new Error('RSS inválido');
+            }
+          } catch (e) {
+            console.error(`Failed to load ${jornal.label}:`, e);
+            this.addToast(`Erro ao carregar ${jornal.label}`, 'error');
+            this.jornaisNews = [];
+          } finally {
+            this.jornaisLoading = false;
+          }
+        },
+        
+        getJornalBadgeClass(jornal) {
+          if(!jornal) return 'jornal-g1';
+          return jornal.badgeClass || 'jornal-g1';
+        },
+        
+        // ===== STATS & FILTERS (EXISTING) =====
         updateStats() {
           this.categories.forEach(cat => { cat.count = cat.id === 'all' ? this.news.length : this.news.filter(n => n.category === cat.id).length; });
         },
@@ -765,34 +907,20 @@
           return pages;
         },
         
-        // ===== HELPERS =====
+        // ===== HELPERS (EXISTING) =====
         getCategoryLabel(cat) { const c = this.categories.find(c => c.id === cat); return c ? c.label : cat; },
         getCategoryColors(cat) { const colors = { crypto: 'bg-yellow-600/20 text-yellow-400 border-yellow-600/30', macro: 'bg-blue-600/20 text-blue-400 border-blue-600/30', politics: 'bg-red-600/20 text-red-400 border-red-600/30', tech: 'bg-purple-600/20 text-purple-400 border-purple-600/30' }; return colors[cat] || colors.crypto; },
         getDefaultImage(category) { const images = { crypto: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=600&h=400&fit=crop', macro: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&h=400&fit=crop', politics: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600&h=400&fit=crop', tech: 'https://images.unsplash.com/photo-1677442135161-8c2d6c5b5f3e?w=600&h=400&fit=crop' }; return images[category] || images.crypto; },
-        
-        getSourceBadgeClass(source) {
-          const map = { 'CoinDesk': 'source-coindesk', 'CoinTelegraph': 'source-cointelegraph', 'Bitcoin Magazine': 'source-bitcoinmag', 'CoinTelegraph BR': 'source-cointelegraphbr', 'Portal do Bitcoin': 'source-portaldobitcoin', 'Livecoins': 'source-livecoins' };
-          return map[source] || 'source-coindesk';
-        },
-        getShortSource(source) {
-          const map = { 'CoinDesk': 'CD', 'CoinTelegraph': 'CT', 'Bitcoin Magazine': 'BM', 'CoinTelegraph BR': 'CT-BR', 'Portal do Bitcoin': 'PdB', 'Livecoins': 'LC' };
-          return map[source] || source;
-        },
-        
-        timeAgo(dateString) {
-          const date = new Date(dateString), now = new Date(), diff = (now - date) / 1000;
-          if (diff < 60) return 'Agora';
-          if (diff < 3600) return `${Math.floor(diff/60)}min atrás`;
-          if (diff < 86400) return `${Math.floor(diff/3600)}h atrás`;
-          return `${Math.floor(diff/86400)}d atrás`;
-        },
+        getSourceBadgeClass(source) { const map = { 'CoinDesk': 'source-coindesk', 'CoinTelegraph': 'source-cointelegraph', 'Bitcoin Magazine': 'source-bitcoinmag', 'CoinTelegraph BR': 'source-cointelegraphbr', 'Portal do Bitcoin': 'source-portaldobitcoin', 'Livecoins': 'source-livecoins' }; return map[source] || 'source-coindesk'; },
+        getShortSource(source) { const map = { 'CoinDesk': 'CD', 'CoinTelegraph': 'CT', 'Bitcoin Magazine': 'BM', 'CoinTelegraph BR': 'CT-BR', 'Portal do Bitcoin': 'PdB', 'Livecoins': 'LC' }; return map[source] || source; },
+        timeAgo(dateString) { const date = new Date(dateString), now = new Date(), diff = (now - date) / 1000; if (diff < 60) return 'Agora'; if (diff < 3600) return `${Math.floor(diff/60)}min atrás`; if (diff < 86400) return `${Math.floor(diff/3600)}h atrás`; return `${Math.floor(diff/86400)}d atrás`; },
         get lastUpdate() { if (!this.lastUpdateTimestamp) return '--:--'; return new Date(this.lastUpdateTimestamp).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}); },
         formatPrice(price) { return price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
         
-        // ===== SEARCH =====
+        // ===== SEARCH (EXISTING) =====
         searchNews() { if (this.filters.search.length < 3) { this.searchResults = []; return; } const s = this.filters.search.toLowerCase(); this.searchResults = this.news.filter(n => n.title.toLowerCase().includes(s) || (n.desc && n.desc.toLowerCase().includes(s))); },
         
-        // ===== AI COPY FUNCTIONS =====
+        // ===== AI COPY (EXISTING) =====
         updateAISelection() { if (this.selectAllAI) this.selectedForAI = this.news.map(n => n.id); this.generatePreview(); },
         generatePreview() { const selected = this.news.filter(n => this.selectedForAI.includes(n.id)); if (selected.length === 0) { this.previewText = 'Selecione uma ou mais notícias acima para gerar o preview...'; return; } this.previewText = selected.map(n => `• ${n.title} [${n.source}]`).join('\n'); },
         copyFormat(format) {
@@ -808,11 +936,11 @@
         },
         copyPreview() { if (!this.previewText || this.previewText.includes('Selecione')) { this.addToast('Nada para copiar ainda', 'error'); return; } navigator.clipboard.writeText(this.previewText); this.addToast('✅ Preview copiado!', 'success'); },
         
-        // ===== PERSISTENCE =====
+        // ===== PERSISTENCE (EXISTING) =====
         loadFromCache() { try { const cached = localStorage.getItem('cryptoNewsCache'); if (cached) { const { news, timestamp } = JSON.parse(cached); const age = Date.now() - timestamp; if (age < 60 * 60 * 1000) { this.news = news; this.lastUpdateTimestamp = timestamp; this.nextUpdateTimestamp = timestamp + (60 * 60 * 1000); this.cacheInfo = new Date(timestamp).toLocaleTimeString('pt-BR'); this.updateStats(); } } } catch(e) { console.warn('Cache load failed', e); } },
         saveToCache() { try { localStorage.setItem('cryptoNewsCache', JSON.stringify({ news: this.news, timestamp: Date.now() })); } catch(e) { console.warn('Cache save failed', e); } },
         
-        // ===== UI =====
+        // ===== UI (EXISTING) =====
         toggleTheme() { this.isDark = !this.isDark; document.documentElement.classList.toggle('dark'); },
         addToast(message, type = 'info') { const id = ++this.toastId; this.toasts.push({ id, message, type }); setTimeout(() => this.removeToast(id), 4000); },
         removeToast(id) { this.toasts = this.toasts.filter(t => t.id !== id); }
@@ -821,26 +949,3 @@
   </script>
 </body>
 </html>
-```
-
----
-
-## ✅ ENTREGUE EXATAMENTE COMO PEDIDO:
-
-### 🔹 Fontes: OS 6 PORTAIS OFICIAIS
-```javascript
-newsSources: [
-  { label: 'CoinDesk', rss: 'https://www.coindesk.com/arc/outboundfeeds/rss/' },
-  { label: 'CoinTelegraph', rss: 'https://cointelegraph.com/rss' },
-  { label: 'Bitcoin Magazine', rss: 'https://bitcoinmagazine.com/.rss/full' },
-  { label: 'CoinTelegraph BR', rss: 'https://cointelegraph.com.br/rss' },
-  { label: 'Portal do Bitcoin', rss: 'https://portaldobitcoin.uol.com.br/feed/' },
-  { label: 'Livecoins', rss: 'https://livecoins.com.br/feed/' }
-]
-```
-
-### 🔹 Atualização: 1 HORA (3600000ms)
-```javascript
-const ONE_HOUR = 60 * 60 * 1000;
-setInterval(() => { this.refreshManual(); }, ONE_HOUR);
-```
