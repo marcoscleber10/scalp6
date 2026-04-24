@@ -1,1425 +1,464 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests; connect-src 'self' https://*.binance.com wss://*.binance.com https://s3.tradingview.com https://*.tradingview.com https://api.binance.com; script-src 'self' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline';">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Mestre do Scalping Pro</title>
-    <style>
-        :root {
-            --bg: #0d1117;
-            --card: #161b22;
-            --green: #00ff88;
-            --red: #ff3e3e;
-            --text: #8b949e;
-            --accent: #2f81f7;
-            --gold: #ffcc00;
-            --purple: #9d4edd;
-            --orange: #ff9900;
-            --bright-yellow: #ffcc00;
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoNews Pro - Agregador</title>
+    
+    <!-- Tailwind CSS (Estilização) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gray: { 850: '#1f2937', 950: '#030712' }
+                    }
+                }
+            }
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
-        body { background-color: var(--bg); color: white; display: flex; justify-content: center; padding: 20px; transition: filter 0.5s, box-shadow 0.5s; }
-        .card { background: var(--card); padding: 24px; border-radius: 24px; width: 100%; max-width: 420px; border: 1px solid #30363d; box-shadow: 0 20px 40px rgba(0,0,0,0.6); transition: all 0.3s; }
-        .card.desktop-mode { max-width: 95%; }
-        .desktop-mode #chart_container { height: 500px !important; }
-        h4 { color: var(--text); font-size: 12px; text-align: center; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px dashed #30363d; }
-        .btn-mode { width: 100%; background: var(--accent); color: white; border: none; padding: 12px; border-radius: 40px; font-weight: bold; cursor: pointer; margin-bottom: 15px; font-size: 12px; text-transform: uppercase; }
-        .time-selector { display: flex; gap: 8px; margin-bottom: 15px; }
-        .time-btn { flex: 1; background: #21262d; border: 1px solid #30363d; color: var(--text); padding: 12px 5px; border-radius: 40px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .time-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
-        .time-btn.active[data-t="15"] { background: var(--gold); color: #000; border-color: var(--gold); }
-        select { width: 100%; background: #21262d; color: white; border: 1px solid #30363d; padding: 15px; border-radius: 40px; margin-bottom: 20px; font-size: 14px; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239aa4b3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>"); background-repeat: no-repeat; background-position: right 18px center; background-size: 16px; }
-        .price { font-size: 42px; font-weight: 800; color: var(--green); text-align: center; margin-bottom: 15px; font-family: 'Courier New', monospace; text-shadow: 0 0 10px #00ff8840; }
-        .status-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .status-bar { background: #0f141c; padding: 12px 5px; border-radius: 20px; border: 1px solid #2a3340; text-align: center; position: relative; overflow: hidden; }
-        .status-label { font-size: 9px; color: var(--text); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px; }
-        .status-value { font-size: 14px; font-weight: bold; display: block; }
-        .light-glow { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: currentColor; filter: blur(4px); opacity: 0.5; }
-        .score-container { margin-bottom: 15px; }
-        .score-bar { background: #1e2a38; height: 20px; border-radius: 10px; overflow: hidden; margin: 5px 0; }
-        .score-fill { height: 100%; width: 0%; transition: width 0.3s; }
-        .score-fill.alta { background: linear-gradient(90deg, #00ff88, #00cc66); }
-        .score-fill.media { background: linear-gradient(90deg, #ffcc00, #ffaa00); }
-        .score-fill.baixa { background: linear-gradient(90deg, #ff3e3e, #cc0000); }
-        .score-text { display: flex; justify-content: space-between; font-size: 11px; color: var(--text); }
-        @keyframes flashGreen { 0% { background-color: rgba(0,255,136,0); } 50% { background-color: rgba(0,255,136,0.3); } 100% { background-color: rgba(0,255,136,0); } }
-        @keyframes flashRed { 0% { background-color: rgba(255,62,62,0); } 50% { background-color: rgba(255,62,62,0.3); } 100% { background-color: rgba(255,62,62,0); } }
-        .alerta-compra { animation: flashGreen 0.5s ease-in-out 3; }
-        .alerta-venda { animation: flashRed 0.5s ease-in-out 3; }
-        .badge-alerta { background: var(--gold); color: #000; padding: 8px 12px; border-radius: 40px; font-weight: bold; font-size: 12px; margin-bottom: 15px; display: inline-block; animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { opacity: 0.8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } 100% { opacity: 0.8; transform: scale(1); } }
-        .modo-operacao { background: #1e2a38; padding: 15px; border-radius: 20px; margin: 15px 0; display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--accent); }
-        .switch { position: relative; display: inline-block; width: 50px; height: 24px; }
-        .switch input { display: none; }
-        .slider { position: absolute; cursor: pointer; background-color: #444; border-radius: 24px; top: 0; left: 0; right: 0; bottom: 0; transition: .4s; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: .4s; }
-        input:checked + .slider { background-color: #00ff88; }
-        input:checked + .slider:before { transform: translateX(26px); }
-        #statusModo { color: var(--text); font-size: 12px; font-weight: bold; }
-        .modo-descanso { filter: brightness(0.3); }
-        .modo-ativo { box-shadow: 0 0 20px #00ff88 inset; }
-        .alarme-section { background: #1e2a38; padding: 15px; border-radius: 20px; margin: 15px 0; border: 1px solid var(--gold); }
-        .alarme-title { color: var(--gold); font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
-        .alarme-input-group { display: flex; gap: 8px; margin-bottom: 10px; }
-        .alarme-input { flex: 1; background: #0d151f; border: 1px solid #3d4d62; color: white; padding: 10px; border-radius: 20px; font-size: 14px; }
-        .alarme-btn { background: var(--accent); border: none; color: white; padding: 10px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; }
-        .alarme-lista { margin-top: 10px; font-size: 12px; }
-        .alarme-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #0d151f; border-radius: 10px; margin-bottom: 5px; }
-        .alarme-remover { background: var(--red); border: none; color: white; padding: 3px 8px; border-radius: 10px; cursor: pointer; font-size: 10px; }
-        #chart_container { width: 100%; height: 220px; border-radius: 20px; margin-bottom: 20px; border: 1px solid #30363d; background: #000; transition: height 0.3s; }
-        .inputs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
-        label { font-size: 9px; color: var(--text); text-transform: uppercase; margin-bottom: 4px; display: block; }
-        input { width: 100%; background: #21262d; border: 1px solid #30363d; color: white; padding: 12px; border-radius: 20px; font-size: 14px; }
-        .btn-calc { width: 100%; padding: 16px; background: var(--green); color: #0d1117; border: none; border-radius: 40px; font-weight: 800; cursor: pointer; text-transform: uppercase; font-size: 16px; box-shadow: 0 6px 0 #0b5e3c; transform: translateY(-2px); transition: 0.1s; margin-top: 10px; }
-        .btn-calc:active { transform: translateY(4px); box-shadow: 0 2px 0 #0b5e3c; }
-        .res { margin-top: 20px; padding: 18px; background: #0f151d; border-radius: 24px; display: none; border: 1px solid #2a3440; }
-        .projects-section { margin-top: 30px; border-top: 1px solid #30363d; padding-top: 20px; }
-        .projects-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .project-btn { background: #1a222c; color: #c9d1d9; border: 1px solid #30363d; padding: 12px 5px; border-radius: 30px; font-size: 11px; font-weight: 600; text-decoration: none; text-align: center; display: block; cursor: pointer; }
-        .project-btn:hover { background: #26323f; }
-        .ad-container { margin-top: 25px; padding: 15px; background: #161e28; border-radius: 30px; border: 1px solid #ffcc0040; text-align: center; }
-        .btn-ad { display: inline-block; background: #ffcc00; color: #000; text-decoration: none; padding: 12px 32px; border-radius: 40px; font-weight: 800; margin-top: 10px; border: 1px solid #ffcc66; box-shadow: 0 4px 0 #8f651f; transform: translateY(-2px); transition: 0.1s; }
-        .btn-ad:active { transform: translateY(2px); box-shadow: 0 1px 0 #8f651f; }
-        .market-table { width: 100%; font-size: 11px; margin-top: 20px; border-collapse: collapse; color: #b6c2d2; }
-        .market-table td { padding: 8px 4px; border-bottom: 1px solid #222b35; }
-        .market-header { color: var(--accent); font-weight: 700; font-size: 10px; letter-spacing: 1.5px; padding-top: 15px; }
-        .floating-ball { position: fixed; bottom: 30px; right: 30px; width: 70px; height: 70px; background: radial-gradient(circle at 30% 30%, var(--green), #0f8f5c); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #0b0f14; font-weight: 900; font-size: 28px; box-shadow: 0 10px 25px #00ff8880; cursor: pointer; z-index: 9999; border: 2px solid white; }
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 999999; }
-        .modal-content { background: #161b22; padding: 30px; border-radius: 30px; width: 90%; max-width: 700px; max-height: 85vh; overflow-y: auto; border: 2px solid var(--gold); position: relative; z-index: 1000000; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
-        .submodal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 10000000; }
-        .submodal-content { background: #1e2a36; padding: 25px; border-radius: 25px; width: 90%; max-width: 650px; max-height: 80vh; overflow-y: auto; border: 2px solid var(--accent); position: relative; box-shadow: 0 20px 30px rgba(0,0,0,0.5); }
-        .submodal-content h2 { color: var(--gold); margin-bottom: 15px; }
-        .submodal-content h3 { color: var(--gold); margin: 15px 0 8px; }
-        .button-group { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
-        .button-group button { background: var(--accent); border: none; color: white; padding: 8px 20px; border-radius: 30px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .button-group button:hover { background: var(--green); color: #000; }
-        .campo { margin-bottom: 15px; }
-        .campo label { color: var(--text); font-size: 11px; text-transform: uppercase; margin-bottom: 5px; display: block; }
-        .donation-item { background: #1e2a36; padding: 15px; border-radius: 15px; margin: 10px 0; border-left: 5px solid; }
-        .donation-item p { word-break: break-all; background: #0d151f; padding: 10px; border-radius: 10px; margin-top: 8px; font-family: monospace; display: flex; justify-content: space-between; align-items: center; }
-        .copy-btn { background: var(--accent); border: none; color: white; padding: 5px 15px; border-radius: 20px; cursor: pointer; font-size: 11px; font-weight: bold; margin-left: 10px; }
-        .copy-btn:hover { background: var(--green); color: #000; }
-        .console { background: #0d1117; padding: 10px; border-radius: 10px; margin: 10px 0; font-size: 12px; font-family: monospace; height: 50px; overflow-y: auto; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .security-warning { background: #ff3e3e20; border: 1px solid #ff3e3e; color: #ff3e3e; padding: 10px; border-radius: 10px; font-size: 11px; margin-bottom: 15px; text-align: center; }
-        .tabs-container { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--accent); padding-bottom: 10px; flex-wrap: wrap; }
-        .tab-btn { background: #1e2a38; border: 1px solid #3d4d62; color: var(--text); padding: 8px 16px; border-radius: 30px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .tab-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
-        .tab-btn.robot { background: var(--bright-yellow); color: #000; border-color: var(--bright-yellow); font-weight: bold; }
-        .tab-btn.robot.active { background: var(--bright-yellow); color: #000; border-color: var(--bright-yellow); box-shadow: 0 0 10px var(--bright-yellow); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .categories-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .category-card { background: #1e2a38; border-radius: 16px; padding: 15px; border: 1px solid #3d4d62; }
-        .category-title { color: var(--gold); font-weight: bold; margin-bottom: 10px; font-size: 14px; text-transform: uppercase; display: flex; align-items: center; justify-content: space-between; }
-        .category-item { display: flex; justify-content: space-between; font-size: 12px; padding: 5px 0; border-bottom: 1px dashed #2a3440; }
-        .category-item:last-child { border-bottom: none; }
-        .category-item .pair { color: white; }
-        .category-item .apr { color: var(--green); font-weight: bold; }
-        .guide-box { background: #0d1a24; border-left: 4px solid var(--accent); border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; font-size: 12px; color: #b0c4d9; line-height: 1.5; }
-        .guide-box summary { cursor: pointer; color: var(--accent); font-weight: bold; outline: none; }
-        .warning-high-apr { background: rgba(255, 153, 0, 0.15); border: 1px solid var(--orange); color: var(--orange); padding: 8px 12px; border-radius: 20px; font-size: 11px; margin-bottom: 15px; text-align: center; }
-        .table-wrapper { overflow-x: auto; margin-top: 20px; border-radius: 16px; border: 1px solid #2a3440; }
-        .pools-table { width: 100%; border-collapse: collapse; font-size: 12px; color: var(--text); min-width: 1400px; }
-        .pools-table th { text-align: left; padding: 12px 8px; border-bottom: 2px solid var(--accent); color: white; font-weight: 600; background: #1a222c; white-space: nowrap; cursor: pointer; }
-        .pools-table td { padding: 10px 8px; border-bottom: 1px solid #2a3440; white-space: nowrap; }
-        .pools-table tr:hover { background: #1e2a38; }
-        .ratio-bar { background: #0d151f; height: 16px; width: 60px; border-radius: 8px; overflow: hidden; display: inline-block; }
-        .ratio-bar span { display: block; height: 100%; background: var(--green); }
-        .apr-high { color: var(--green); font-weight: bold; }
-        .score-cell { font-weight: bold; text-align: center; }
-        .score-bar-small { width: 60px; height: 16px; background: #1e2a38; border-radius: 8px; overflow: hidden; display: inline-block; margin-right: 5px; }
-        .score-fill-small { height: 100%; background: var(--green); }
-        .positive { color: var(--green); }
-        .negative { color: var(--red); }
-        .pool-modal-content { max-width: 1400px !important; width: 95% !important; }
-        .news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px; }
-        .news-card { background: #1e2a38; border-radius: 16px; padding: 15px; border-left: 4px solid var(--accent); transition: 0.2s; }
-        .news-card:hover { transform: translateY(-2px); border-color: var(--green); }
-        .news-card h4 { color: white; margin-bottom: 8px; font-size: 14px; }
-        .news-card a { color: var(--accent); text-decoration: none; font-size: 12px; word-break: break-all; }
-        .news-section { margin-top: 25px; border-top: 1px solid #30363d; padding-top: 20px; }
-        .news-section h4 { color: var(--gold); margin-bottom: 15px; text-align: left; border-bottom: none; padding-bottom: 0; }
-        .news-block { background: #1e2a38; border-radius: 16px; padding: 15px; }
-        .news-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
-        .news-links a { color: var(--accent); text-decoration: none; font-size: 12px; }
-        .strategy-content { color: #c9d1d9; font-size: 14px; line-height: 1.6; }
-        .strategy-content h3 { color: var(--green); margin-top: 25px; margin-bottom: 12px; font-size: 1.2rem; }
-        .strategy-content h4 { color: var(--gold); margin-top: 20px; margin-bottom: 8px; }
-        .code-block { background: #0d151f; border-left: 3px solid var(--accent); padding: 12px; border-radius: 8px; font-family: monospace; font-size: 12px; overflow-x: auto; margin: 12px 0; }
-        .strategy-badge { background: var(--accent); color: white; border-radius: 20px; padding: 2px 8px; font-size: 10px; font-weight: bold; display: inline-block; margin-right: 8px; }
-        .btn-detalhe { background: var(--accent); border: none; color: white; padding: 4px 12px; border-radius: 20px; cursor: pointer; font-size: 11px; margin-left: 10px; transition: 0.2s; }
-        .btn-detalhe:hover { background: var(--green); color: #000; }
-        .robot-content { background: #ffcc00; color: #000; padding: 20px; border-radius: 16px; margin-bottom: 20px; }
-        .mvrv-card { background: linear-gradient(135deg, #1e2a3a, #0f141c); border-radius: 20px; padding: 20px; margin: 15px 0; border: 1px solid var(--accent); }
-        .mvrv-value { font-size: 36px; font-weight: bold; font-family: monospace; }
-        .regime-badge { display: inline-block; padding: 6px 16px; border-radius: 30px; font-weight: bold; font-size: 14px; }
-        .simulador-input { background: #0d151f; border: 1px solid #3d4d62; color: white; padding: 12px; border-radius: 20px; width: 100%; margin: 10px 0; }
-        .alocacao-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #2a3440; }
-        .alocacao-percent { font-weight: bold; color: var(--green); }
-        .copy-strategy-btn { background: var(--gold); color: #000; border: none; padding: 12px 20px; border-radius: 30px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 15px; font-size: 14px; }
-        .copy-strategy-btn:hover { background: #ffcc66; }
-        .indicator-input { background: #0d151f; border: 1px solid #3d4d62; color: white; padding: 10px; border-radius: 16px; width: 100%; text-align: center; font-size: 14px; }
-        .indicator-card { background: #1e2a38; border-radius: 16px; padding: 12px; margin-bottom: 12px; }
-        .indicator-label { font-size: 12px; color: var(--text); margin-bottom: 5px; }
-        .semaforo { display: inline-block; width: 24px; height: 24px; border-radius: 50%; margin-right: 10px; }
-        .semaforo-verde { background: #00ff88; box-shadow: 0 0 10px #00ff88; }
-        .semaforo-amarelo { background: #ffcc00; box-shadow: 0 0 10px #ffcc00; }
-        .semaforo-vermelho { background: #ff3e3e; box-shadow: 0 0 10px #ff3e3e; }
-        .score-grande { font-size: 48px; font-weight: bold; text-align: center; font-family: monospace; }
-        .search-pair-input { width: 100%; background: #0d151f; border: 1px solid #3d4d62; color: white; padding: 12px 16px; border-radius: 30px; font-size: 13px; margin-bottom: 15px; outline: none; }
-        .search-pair-input:focus { border-color: var(--accent); box-shadow: 0 0 5px var(--accent); }
-        .mode-toggle { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .mode-btn { flex: 1; min-width: 100px; background: #21262d; border: 1px solid #30363d; color: var(--text); padding: 8px; border-radius: 30px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .mode-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
-        .mode-btn.apr-high { background: var(--orange); color: #000; border-color: var(--orange); }
-        .mode-btn.apr-high.active { background: var(--orange); color: #000; border-color: var(--orange); box-shadow: 0 0 10px var(--orange); }
-        .filter-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 15px; background: #1a222c; padding: 15px; border-radius: 20px; }
-        .filter-item { flex: 1; min-width: 100px; }
-        .filter-item label { font-size: 9px; color: var(--text); text-transform: uppercase; margin-bottom: 2px; display: block; }
-        .filter-item input { width: 100%; background: #0d151f; border: 1px solid #3d4d62; color: white; padding: 8px 10px; border-radius: 20px; font-size: 12px; }
-        .btn-filter { background: var(--accent); border: none; color: white; padding: 8px 20px; border-radius: 30px; cursor: pointer; font-weight: bold; font-size: 12px; height: 36px; }
-        .btn-filter:hover { background: var(--green); color: #000; }
-        .btn-atualizar { background: var(--accent); border: none; color: white; padding: 8px 16px; border-radius: 30px; cursor: pointer; font-weight: bold; margin-bottom: 15px; margin-left: 10px; }
-        .btn-atualizar:hover { background: var(--green); color: #000; }
-        .link-pool { color: var(--accent); text-decoration: none; margin-left: 8px; font-size: 14px; }
-        .link-pool:hover { color: var(--green); }
-        .risk-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; }
-        .risk-verde { background: #00ff88; box-shadow: 0 0 6px #00ff88; }
-        .risk-amarelo { background: #ffcc00; box-shadow: 0 0 6px #ffcc00; }
-        .risk-vermelho { background: #ff3e3e; box-shadow: 0 0 6px #ff3e3e; }
-        .signal-icon { display: inline-block; width: 16px; height: 16px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+    </script>
+    
+    <!-- Alpine.js (Lógica/Reatividade) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Ícones (Phosphor Icons) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
-        /* ===== NOVAS MELHORIAS ===== */
-        .table-loading { text-align: center; padding: 30px; color: var(--text); font-size: 13px; }
-        .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid var(--accent); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 10px; vertical-align: middle; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .table-loading .dots::after { content: '...'; animation: dots 1.5s steps(4, end) infinite; }
-        @keyframes dots { 0%, 20% { content: '.'; } 40% { content: '..'; } 60%, 100% { content: '...'; } }
-        
-        th[title], td[title] { cursor: help; position: relative; }
-        th[title]:hover::after { content: attr(title); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: var(--card); color: white; padding: 8px 12px; border-radius: 8px; font-size: 11px; white-space: nowrap; z-index: 1000; border: 1px solid var(--accent); box-shadow: 0 4px 12px rgba(0,0,0,0.3); pointer-events: none; opacity: 0; animation: fadeIn 0.2s forwards; margin-bottom: 5px; }
-        @keyframes fadeIn { to { opacity: 1; } }
-        
-        .regime-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-        .regime-badge.baixo { background: rgba(0,255,136,0.15); color: #00ff88; border: 1px solid #00ff88; }
-        .regime-badge.medio { background: rgba(255,204,0,0.15); color: #ffcc00; border: 1px solid #ffcc00; }
-        .regime-badge.alto { background: rgba(255,62,62,0.15); color: #ff3e3e; border: 1px solid #ff3e3e; }
-        
-        /* AUTO-UPDATE INDICATORS */
-        .auto-update-info { 
-            background: #1e2a38; 
-            padding: 10px 15px; 
-            border-radius: 20px; 
-            margin: 15px 0; 
-            border: 1px solid var(--accent);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .update-time { 
-            font-size: 11px; 
-            color: var(--text);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .update-time span {
-            color: var(--green);
-            font-weight: bold;
-        }
-        .countdown {
-            font-size: 12px;
-            color: var(--gold);
-            font-weight: bold;
-        }
-        .interval-selector {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-        }
-        .interval-btn {
-            background: #21262d;
-            border: 1px solid #30363d;
-            color: var(--text);
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 10px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .interval-btn.active {
-            background: var(--accent);
-            color: white;
-            border-color: var(--accent);
-        }
+    <style>
+        [x-cloak] { display: none !important; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     </style>
 </head>
-<body>
-    <div class="card" id="mainCard">
-        <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 10px;">
-            <h4 style="flex:1;">⚡ MESTRE DO SCALPING PRO ⚡</h4>
-        </div>
-        <button class="btn-mode" onclick="toggleMode()">🖥️ ALTERNAR MODO COMPUTADOR</button>
+<body class="bg-black text-gray-100 font-sans antialiased transition-colors duration-300"
+      x-data="cryptoNews()"
+      x-init="initApp()">
 
-        <div class="time-selector">
-            <button class="time-btn active" data-t="1" onclick="setTF('1', this)">⚡ SCALP (1m)</button>
-            <button class="time-btn" data-t="15" onclick="setTF('15', this)">🔭 DAY TRADE (15m)</button>
-        </div>
-
-        <select id="pairSelector" onchange="onSymbolChange()">
-            <optgroup label="📈 Binance">
-                <option value="BINANCE:BTCUSDT" selected>₿ BTC/USDT (Binance)</option>
-                <option value="BINANCE:ETHUSDT">⟠ ETH/USDT (Binance)</option>
-                <option value="BINANCE:SOLUSDT">◎ SOL/USDT (Binance)</option>
-            </optgroup>
-            <optgroup label="🌀 Hyperliquid">
-                <option value="BYBIT:BTCUSDT">₿ BTC/USD (Hyperliquid)</option>
-                <option value="BYBIT:ETHUSDT">⟠ ETH/USD (Hyperliquid)</option>
-                <option value="BYBIT:SOLUSDT">◎ SOL/USD (Hyperliquid)</option>
-            </optgroup>
-            <optgroup label="🏅 Metais & Energia">
-                <option value="TVC:GOLD">🥇 Ouro (XAU/USD)</option>
-                <option value="TVC:SILVER">🥈 Prata (XAG/USD)</option>
-                <option value="TVC:USOIL">🛢️ Petróleo WTI</option>
-            </optgroup>
-        </select>
-
-        <div class="price" id="priceText">$ 67,728.12</div>
-
-        <div class="score-container">
-            <div class="score-text"><span>🔥 Confluência</span><span id="scoreValue">40/100</span></div>
-            <div class="score-bar"><div class="score-fill" id="scoreFill" style="width:40%"></div></div>
-            <div class="score-text"><span id="scoreLabel">Evitar operação</span><span id="probabilidade">Baixa probabilidade</span></div>
-        </div>
-
-        <div id="alertaBadge" class="badge-alerta" style="display: none;">🚨 ENTRADA FORTE DETECTADA</div>
-
-        <div class="status-grid">
-            <div id="statusBox" class="status-bar"><div class="light-glow"></div><span class="status-label">SINAL GERAL</span><span class="status-value"><span id="sinalGeralIcon" class="signal-icon" style="background:#ffcc00;"></span><span id="statusText">⚠️ AGUARDAR</span></span></div>
-            <div id="rsiBox" class="status-bar"><div class="light-glow"></div><span class="status-label">FILTRO TÉCNICO</span><span class="status-value"><span id="sinalTecnicoIcon" class="signal-icon" style="background:#ff3e3e;"></span><span id="rsiText">📉 VENDA</span></span></div>
-            <div id="momBox" class="status-bar"><div class="light-glow"></div><span class="status-label">MOMENTUM</span><span class="status-value"><span id="sinalMomentumIcon" class="signal-icon" style="background:#ffcc00;"></span><span id="momText">⚖️ NEUTRO</span></span></div>
-        </div>
-
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 11px;">
-            <span>📊 Volatilidade: <span id="volText">MÉDIA</span></span>
-            <span>⏰ Sessão: <span id="sessaoText">Londres</span></span>
-        </div>
-
-        <div class="modo-operacao"><span id="statusModo">Modo Operação: OFF</span><label class="switch"><input type="checkbox" id="lockScreenToggle"><span class="slider"></span></label></div>
-
-        <div class="alarme-section">
-            <div class="alarme-title"><span>🔔 ALARME DE PREÇO</span></div>
-            <div class="alarme-input-group"><input type="number" id="alarmePreco" class="alarme-input" placeholder="Preço alvo (ex: 75000)" step="100"><button class="alarme-btn" onclick="adicionarAlarme()">Adicionar</button></div>
-            <div class="alarme-lista" id="alarmeLista"><div style="color: var(--text); text-align: center; padding: 10px;">Nenhum alarme definido</div></div>
-        </div>
-
-        <div id="chart_container"></div>
-
-        <div class="inputs-grid">
-            <div><label>💰 Capital ($)</label><input type="number" id="capital" value="300"></div>
-            <div><label>⚡ Alavancagem</label><input type="number" id="lev" value="10"></div>
-            <div><label>✅ Gain %</label><input type="number" id="tpP" value="1.0" step="0.1"></div>
-            <div><label>🛑 Stop %</label><input type="number" id="slP" value="1.0" step="0.1"></div>
-        </div>
-
-        <button class="btn-calc" onclick="calc()">📊 CALCULAR ALVOS</button>
-
-        <div id="results" class="res"><div style="display:flex; justify-content:space-between;"><span>🟢 TP:</span> <span id="resTP" style="color:var(--green);"></span></div><div style="display:flex; justify-content:space-between; margin-top:10px;"><span>🔴 SL:</span> <span id="resSL" style="color:var(--red);"></span></div></div>
-
-        <div class="projects-section">
-            <div class="projects-grid">
-                <a href="https://site-557591544835-620634786284.southamerica-east1.run.app" class="project-btn" target="_blank">Sinais Invest</a>
-                <a href="https://site-combustai-620634786284.southamerica-east1.run.app" class="project-btn" target="_blank">CombustAI</a>
-                <a href="https://site-559791916621-620634786284.southamerica-east1.run.app" class="project-btn" target="_blank">Registro DCA</a>
-                <a href="https://pepinometro-620634786284.southamerica-east1.run.app" class="project-btn" target="_blank">Pepinômetro</a>
-                <a href="https://historia-copas-620634786284.southamerica-east1.run.app" class="project-btn" target="_blank">História Copas</a>
-                <a href="https://investopcao.culturabuilder.com" class="project-btn" target="_blank">InvestOpção</a>
-                <a href="https://marcoscleber10.github.io/centralweb/" class="project-btn" target="_blank">Central Web</a>
-                <a href="https://marcoscleber10.github.io/hub/" class="project-btn" target="_blank">Hub Empréstimo</a>
-                <a href="https://www.yldlab.xyz/" class="project-btn" target="_blank">Pool Yldlab</a>
-                <button class="project-btn" onclick="openPoolsModal()" style="background: var(--purple); color: white;">🌊 Dados de Mercado</button>
-            </div>
-        </div>
-
-        <div class="ad-container">
-            <span style="color:var(--gold); font-weight:800; font-size:16px;">📺 ATMOS IPTV</span><br>
-            <span style="font-size:12px;">+15.000 canais • 4K • Estável</span>
-            <a href="https://wa.me/5597991916621" target="_blank" class="btn-ad">TESTE GRÁTIS</a>
-        </div>
-
-        <table class="market-table">
-              <tr><td colspan="3" class="market-header">🌍 SESSÕES CRIPTO / FOREX</td></tr>
-              <tr><td>🌏 Ásia</td><td>21:00-01:00</td><td style="color:var(--gold); text-align:right;">● médio</td></tr>
-              <tr><td>🇪🇺 Londres</td><td>04:00-09:00</td><td style="color:var(--green); text-align:right;">● alto</td></tr>
-              <tr><td>🇺🇸 NY (Pico)</td><td>10:00-14:00</td><td style="color:var(--green); text-align:right;">● PICO</td></tr>
-              <tr><td colspan="3" class="market-header">🏆 EURO, PRATA & WTI</td></tr>
-              <tr><td>🥇 Metais (NY)</td><td>09:20-15:30</td><td style="color:var(--gold); text-align:right;">● liquidez</td></tr>
-              <tr><td>🛢️ Petróleo (WTI)</td><td>10:00-16:30</td><td style="color:var(--accent); text-align:right;">● volatilidade</td></tr>
-        </table>
-
-        <div class="news-section">
-            <h4>📰 Notícias e Calendário</h4>
-            <div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: space-between;">
-                <div style="flex: 1; min-width: 200px;">
-                    <div class="news-block"><h5>📅 Calendário Econômico</h5><a href="https://www.tradingview.com/economic-calendar/" target="_blank" style="color: var(--accent);">TradingView Economic Calendar</a></div>
-                </div>
-                <div style="flex: 2; min-width: 300px;">
-                    <div class="news-block"><h5>📰 Principais Notícias Cripto</h5><div class="news-links"><a href="https://livecoins.com.br/" target="_blank">Livecoins</a><a href="https://cointelegraph.com.br/" target="_blank">CoinTelegraph Brasil</a><a href="https://www.coindesk.com/" target="_blank">CoinDesk</a><a href="https://cointelegraph.com/" target="_blank">CoinTelegraph</a><a href="https://www.cryptobreaking.com/" target="_blank">Crypto Breaking</a></div></div>
-                </div>
-            </div>
-        </div>
-
-        <button class="project-btn" onclick="openDonationModal()" style="background:var(--gold); color:#000; width:100%; margin-top:15px;">💰 Donativos</button>
-    </div>
-
-    <div class="floating-ball" onclick="openPasswordModal()">🔓</div>
-
-    <!-- MODAL DE SENHA -->
-    <div id="passwordModal" class="modal"><div class="modal-content" style="max-width:350px;"><h2>🔐 ACESSO</h2><input type="password" id="passInput" maxlength="9" placeholder="*********" style="text-align:center; font-size:24px; letter-spacing:4px;"><div class="button-group"><button class="close-btn" onclick="checkPassword()">VALIDAR</button><button class="close-btn" onclick="fecharModal('passwordModal')">Fechar</button></div></div></div>
-
-    <!-- MODAL DO ROBÔ -->
-    <div id="robotModal" class="modal"><div class="modal-content"><h2>🤖 ROBÔ DE LIQUIDEZ</h2><p style="color:var(--green);">🔓 Acesso autorizado</p>
-        <div class="modo-operacao" style="margin-bottom: 15px;"><span>🎯 Filtro MVRV (regime de mercado)</span><label class="switch"><input type="checkbox" id="mvrvFilterToggle"><span class="slider"></span></label></div>
-        <div id="mvrvStatusRobot" style="font-size: 12px; color: var(--text); margin-bottom: 15px; padding: 10px; background: #0d151f; border-radius: 12px; display: none;">📊 Regime atual: <strong id="mvrvRegimeAtualRobot">-</strong><br>💡 <span id="mvrvRecomendacaoRobot">-</span></div>
-        <div class="alarme-section" style="border-color: var(--green); margin-bottom: 20px;">
-            <div class="alarme-title">🧪 SIMULADOR DE AUTOMAÇÃO (Demo)</div>
-            <p style="font-size: 12px;">Configure os parâmetros e veja como o bot se comportaria</p>
-            <div class="grid-2">
-                <div><label>Pool</label><select id="demoPoolSelect"></select></div>
-                <div><label>Valor (USDC)</label><input type="number" id="demoAmount" value="1000" step="100"></div>
-                <div><label>Range (%)</label><select id="demoRangeSelect"><option>±5%</option><option selected>±10%</option><option>±15%</option></select></div>
-                <div><label>Auto-ajuste</label><select id="demoAutoAdjust"><option>ON</option><option>OFF</option></select></div>
-            </div>
-            <button class="btn-calc" onclick="simularBotLiquidez()" style="margin-top: 10px;">▶️ ATIVAR ROBÔ (DEMO)</button>
-            <div id="demoLog" style="background: #0d151f; padding: 10px; border-radius: 12px; margin-top: 15px; font-family: monospace; font-size: 11px; height: 120px; overflow-y: auto;">[Bot] Aguardando simulação...</div>
-            <p style="font-size: 10px; margin-top: 8px; color: var(--text);">⚠️ Versão demonstrativa – em breve integração real com Meteora/Orca.</p>
-        </div>
-        <div class="security-warning">⚠️ ATENÇÃO: Use apenas em ambiente local. Chave privada não é salva.</div>
-        <h3>🔌 MODO REAL (Hyperliquid - Futuros)</h3>
-        <div class="campo"><label>Endereço da conta principal</label><input type="text" id="hlMainAddress" value="0x9a761Cc6331Fd28D0b04811135dfA233f6499C9C"></div>
-        <div class="campo"><label>Endereço da API wallet (Robonovo)</label><input type="text" id="hlApiAddress" value="0xa9adb7057b5531c077962289a69bbadc4973e381"></div>
-        <div class="campo"><label>Chave privada da API wallet</label><input type="password" id="hlApiPrivateKey" placeholder="0x..."></div>
-        <button class="close-btn" onclick="connectHyperliquid()">🔌 Validar e Conectar</button>
-        <div class="console" id="apiConsole">[API] Desconectado</div>
-        <div class="grid-2"><div><label>Stop Loss %</label><input type="number" id="botSL" value="1.5" step="0.1"></div><div><label>Take Profit %</label><input type="number" id="botTP" value="1.0" step="0.1"></div></div>
-        <div class="campo"><label>Par</label><select id="botPair"><option value="BTC">₿ BTC/USDC</option><option value="ETH">⟠ ETH/USDC</option><option value="SOL">◎ SOL/USDC</option><option value="GOLD">🥇 XAU/USD (Ouro)</option><option value="SILVER">🥈 XAG/USD (Prata)</option><option value="WTI">🛢️ WTI (Petróleo)</option></select></div>
-        <button class="close-btn" onclick="placeRealOrder()">🚀 ENVIAR ORDEM REAL</button>
-        <div class="button-group"><button class="close-btn" onclick="fecharModal('robotModal')">Fechar</button></div></div></div>
-
-    <!-- MODAL DE DONATIVOS -->
-    <div id="donationModal" class="modal"><div class="modal-content"><h2>💰 Donativos</h2><p style="background:#1e2a36; padding:15px; border-radius:15px; margin-bottom:20px;">Projeto independente, sem fins lucrativos. Contribuições ajudam a manter os custos. Obrigado!</p>
-        <div class="donation-item" style="border-left-color:#8a2be2;"><strong>⚡ Lightning Network</strong><p>cloggedparrot01@walletofsatoshi.com <button class="copy-btn" onclick="copyText('cloggedparrot01@walletofsatoshi.com')">Copiar</button></p></div>
-        <div class="donation-item" style="border-left-color:#f7931a;"><strong>₿ Bitcoin</strong><p>bc1q3zf09xtensa5kag3nz6jsvqyle3sgnmns0j9n5 <button class="copy-btn" onclick="copyText('bc1q3zf09xtensa5kag3nz6jsvqyle3sgnmns0j9n5')">Copiar</button></p></div>
-        <div class="donation-item" style="border-left-color:#627eea;"><strong>🔷 EVM</strong><p>0xAd944bA180610F1Fe43151eD81c0084C918c68e1 <button class="copy-btn" onclick="copyText('0xAd944bA180610F1Fe43151eD81c0084C918c68e1')">Copiar</button></p></div>
-        <div class="donation-item" style="border-left-color:#14f195;"><strong>◎ Solana</strong><p>EtSD7W7YG36ZuMAAX6bwJYJ9keciRK7cP7rJiadiZdmm <button class="copy-btn" onclick="copyText('EtSD7W7YG36ZuMAAX6bwJYJ9keciRK7cP7rJiadiZdmm')">Copiar</button></p></div>
-        <div class="donation-item" style="border-left-color:#32bcad;"><strong>🇧 Pix</strong><p>127d59fc-1f37-4e8e-9fd4-295e1883727b <button class="copy-btn" onclick="copyText('127d59fc-1f37-4e8e-9fd4-295e1883727b')">Copiar</button></p></div>
-        <div class="button-group"><button class="close-btn" onclick="fecharModal('donationModal')">Fechar</button></div></div></div>
-
-    <!-- SUBMODAIS DAS ESTRATÉGIAS -->
-    <div id="submodalEstrategia1" class="submodal"><div class="submodal-content"><h2>📘 Estratégia 1: Market Making Adaptativo</h2><p><strong>Objetivo:</strong> Detectar fluxo agressivo e ajustar o range da posição de liquidez ANTES do preço se mover.</p><p><strong>Exemplo prático:</strong> Posição LP em SOL/USDC com range de ±10% em torno de $150. Se volume comprador > 65%, o bot move o range para cima ([145-175]); se volume vendedor > 65%, move para baixo ([135-165]).</p><p><strong>Riscos:</strong> Em mercados com fluxo falso, o ajuste pode causar saída do range ideal.</p><div class="button-group"><button class="close-btn" onclick="fecharSubmodal('submodalEstrategia1')">Fechar</button></div></div></div>
-    <div id="submodalEstrategia2" class="submodal"><div class="submodal-content"><h2>📘 Estratégia 2: Gamma Scalping</h2><p><strong>Objetivo:</strong> Usar a posição LP como ferramenta de "gamma" – lucrar com volatilidade por meio de hedge.</p><p><strong>Exemplo:</strong> LP em ETH/USDC com $10.000, delta neutra. Se o preço sobe, vende spot para rebalancear e realiza lucro.</p><p><strong>Riscos:</strong> Exige monitoramento constante e capital extra.</p><div class="button-group"><button class="close-btn" onclick="fecharSubmodal('submodalEstrategia2')">Fechar</button></div></div></div>
-    <div id="submodalEstrategia3" class="submodal"><div class="submodal-content"><h2>📘 Estratégia 3: Liquidity Sniping</h2><p><strong>Objetivo:</strong> Entrar em pools novas com APR muito alto antes da massa.</p><p><strong>Exemplo:</strong> Pool nova + APR > 200% → aloca 10% do capital. Se a liquidez aumentar rapidamente, mantém; se o APR cair, sai com lucro.</p><p><strong>Riscos:</strong> Pools novas podem ser fraudulentas (rug pull). Invista apenas em pools auditadas.</p><div class="button-group"><button class="close-btn" onclick="fecharSubmodal('submodalEstrategia3')">Fechar</button></div></div></div>
-    <div id="submodalEstrategia4" class="submodal"><div class="submodal-content"><h2>📘 Estratégia 4: Range baseado em Volatilidade Implícita</h2><p><strong>Objetivo:</strong> Ajustar o range da LP de acordo com a volatilidade real, usando ATR.</p><p><strong>Fórmula:</strong> Range = Preço atual ± (ATR × fator). Fator 1.5 (conservador), 2.5 (moderado), 3.5 (agressivo).</p><p><strong>Riscos:</strong> Em alta volatilidade, range largo reduz eficiência de capital.</p><div class="button-group"><button class="close-btn" onclick="fecharSubmodal('submodalEstrategia4')">Fechar</button></div></div></div>
-    <div id="submodalEstrategia5" class="submodal"><div class="submodal-content"><h2>📘 Estratégia 5: Regime de Mercado</h2><p><strong>Objetivo:</strong> Alterar a estratégia conforme o tipo de mercado (bull, bear, sideways).</p><p><strong>Exemplo:</strong> Em Bull → range aberto; Bear → foco em stable; Sideways → range curto.</p><p><strong>Riscos:</strong> Falsas tendências podem levar a ajustes errados.</p><div class="button-group"><button class="close-btn" onclick="fecharSubmodal('submodalEstrategia5')">Fechar</button></div></div></div>
-    <div id="submodalEstrategia6" class="submodal"><div class="submodal-content"><h2>📘 Estratégia 6: Rebalanceamento por Delta</h2><p><strong>Objetivo:</strong> Manter exposição ideal (ex: 60% BTC / 40% USDC) rebalanceando automaticamente.</p><p><strong>Exemplo:</strong> Se BTC sobe para 70%, vende o excesso para rebalancear.</p><p><strong>Riscos:</strong> Rebalancear frequentemente pode gerar muitas taxas.</p><div class="button-group"><button class="close-btn" onclick="fecharSubmodal('submodalEstrategia6')">Fechar</button></div></div></div>
-    <div id="submodalEstrategia7" class="submodal"><div class="submodal-content"><h2>📘 Estratégia 7: Stop Loss Inteligente para LP</h2><p><strong>Objetivo:</strong> Remover liquidez quando preço sai do range + tendência forte.</p><p><strong>Exemplo:</strong> SOL/USDC range $135-$165. Se SOL cai para $130 com volume vendedor > 80%, remove a LP.</p><p><strong>Riscos:</strong> Pode sair cedo em correção temporária.</p><div class="button-group"><button class="close-btn" onclick="fecharSubmodal('submodalEstrategia7')">Fechar</button></div></div></div>
-    <div id="submodalEstrategia8" class="submodal"><div class="submodal-content"><h2>📘 Estratégia 8: Multi-Pool Optimization</h2><p><strong>Objetivo:</strong> Dividir capital entre diferentes pools para diversificar risco e maximizar yield.</p><p><strong>Exemplo:</strong> 40% stable, 30% SOL/USDC, 30% pool de alto APR.</p><p><strong>Riscos:</strong> Monitoramento de várias pools e maior complexidade.</p><div class="button-group"><button class="close-btn" onclick="fecharSubmodal('submodalEstrategia8')">Fechar</button></div></div></div>
-    <div id="submodalEstrategia9" class="submodal"><div class="submodal-content"><h2>📘 Estratégia 9: Arbitragem entre Pools</h2><p><strong>Objetivo:</strong> Lucrar com diferenças de preço do mesmo ativo em diferentes pools.</p><p><strong>Exemplo:</strong> SOL a $150 na Orca e $150,50 na Meteora → compra na Orca, vende na Meteora.</p><p><strong>Riscos:</strong> Exige capital separado e rápida execução.</p><div class="button-group"><button class="close-btn" onclick="fecharSubmodal('submodalEstrategia9')">Fechar</button></div></div></div>
-    <div id="submodalEstrategia10" class="submodal"><div class="submodal-content"><h2>📘 Estratégia 10: Fee Harvesting Automático</h2><p><strong>Objetivo:</strong> Coletar taxas periodicamente e reinvestir para juros compostos.</p><p><strong>Exemplo:</strong> Taxas acumuladas $50 → retira e adiciona à LP.</p><p><strong>Riscos:</strong> Reinvestir pode aumentar exposição ao ativo em momentos ruins.</p><div class="button-group"><button class="close-btn" onclick="fecharSubmodal('submodalEstrategia10')">Fechar</button></div></div></div>
-    <div id="submodalEstrategia11" class="submodal"><div class="submodal-content"><h2>📘 Estratégia 11: Liquidez Direcional</h2><p><strong>Objetivo:</strong> Range assimétrico para apostar na direção. Ex: 90% acima do preço, 10% abaixo.</p><p><strong>Exemplo:</strong> SOL $150, range [145, 180] (deslocado para cima).</p><p><strong>Riscos:</strong> Se a direção estiver errada, pode perder taxas e sofrer IL assimétrico.</p><div class="button-group"><button class="close-btn" onclick="fecharSubmodal('submodalEstrategia11')">Fechar</button></div></div></div>
-    <div id="submodalEstrategia12" class="submodal"><div class="submodal-content"><h2>📘 Estratégia 12: Machine Learning</h2><p><strong>Objetivo:</strong> Usar modelos de ML para prever ranges, entradas e saídas.</p><p><strong>Exemplo:</strong> Modelo prevê baixa volatilidade → range estreito; alta volatilidade → range amplo.</p><p><strong>Riscos:</strong> Modelos podem errar, especialmente em eventos imprevistos.</p><div class="button-group"><button class="close-btn" onclick="fecharSubmodal('submodalEstrategia12')">Fechar</button></div></div></div>
-    <div id="submodalEstrategia13" class="submodal"><div class="submodal-content"><h2>📘 Estratégia 13: Coin-M Inverse Long (BTC/USD)</h2><p><strong>Objetivo:</strong> Operar contratos perpétuos inversos (Coin-M) na Binance com alavancagem moderada.</p><p><strong>Exemplo:</strong> Posição de 1 contrato BTCUSD com margem 0.5 BTC (alavancagem 2x). Stop loss móvel para proteger lucros.</p><p><strong>Riscos:</strong> Mercados voláteis podem causar perdas rápidas. Use stop loss.</p><div class="button-group"><button class="close-btn" onclick="fecharSubmodal('submodalEstrategia13')">Fechar</button></div></div></div>
-
-    <!-- MODAL DE POOLS COM 8 ABAS -->
-    <div id="poolsModal" class="modal">
-        <div class="modal-content pool-modal-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <h2 style="color: var(--gold); margin: 0;">📊 Dados de Mercado</h2>
-                <button onclick="closePoolsModal()" style="background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer;">✕</button>
-            </div>
-            <div class="tabs-container">
-                <button class="tab-btn active" onclick="switchTab('pools')">🌊 Top Pools</button>
-                <button class="tab-btn" onclick="switchTab('poolsEstrategicas')">🎯 Pools Estratégicas</button>
-                <button class="tab-btn" onclick="switchTab('news')">📰 Notícias</button>
-                <button class="tab-btn" onclick="switchTab('strategies')">📊 Estratégias</button>
-                <button class="tab-btn robot" onclick="switchTab('robot')">🤖 Robô</button>
-                <button class="tab-btn" onclick="switchTab('mvrv')">📊 MVRV Cycle</button>
-                <button class="tab-btn" onclick="switchTab('ciclo')">📈 Indicadores de Ciclo</button>
-                <button class="tab-btn" onclick="switchTab('liquidity')">🤖 Auto Liquidity</button>
-            </div>
-
-            <!-- ABA TOP POOLS -->
-            <div id="poolsTab" class="tab-content active">
-                <!-- AUTO-UPDATE INFO -->
-                <div class="auto-update-info">
-                    <div class="update-time">
-                        <span>🕐 Última atualização:</span>
-                        <span id="lastUpdateTime">--:--:--</span>
+    <!-- ================= HEADER ================= -->
+    <header class="sticky top-0 z-50 bg-gray-900/95 backdrop-blur-md border-b border-gray-800">
+        <div class="max-w-6xl mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                        <i class="ph-bold ph-trend-up text-white text-xl"></i>
                     </div>
-                    <div class="countdown">
-                        Próxima em: <span id="countdownTimer">15:00</span>
-                    </div>
-                    <div class="interval-selector">
-                        <span style="font-size:11px;color:var(--text);">Intervalo:</span>
-                        <button class="interval-btn" onclick="setUpdateInterval(5)">5min</button>
-                        <button class="interval-btn active" onclick="setUpdateInterval(15)">15min</button>
-                        <button class="interval-btn" onclick="setUpdateInterval(30)">30min</button>
-                        <button class="interval-btn" onclick="setUpdateInterval(60)">1h</button>
+                    <div>
+                        <h1 class="text-xl font-bold tracking-tight">CryptoNews <span class="text-blue-500">Pro</span></h1>
+                        <p class="text-[10px] text-gray-500 font-mono uppercase tracking-wider">Agregador em Tempo Real</p>
                     </div>
                 </div>
-                
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                    <input type="text" id="searchPairInput" class="search-pair-input" style="flex:1;" placeholder="🔍 Buscar par (ex: WBTC, SOL, ETH, BRL)..." onkeyup="filtrarPorPar()">
-                    <button class="btn-atualizar" onclick="atualizarPoolsCompleto()" style="margin:0;">🔄 Atualizar</button>
-                </div>
-                <div class="categories-grid" id="categoriesContainer"></div>
-                <div class="warning-high-apr">⚠️ Os valores de APR são atualizados dinamicamente. Sempre analise volume e liquidez.</div>
-                <div class="mode-toggle">
-                    <button id="modoAutoBtn" class="mode-btn" onclick="setModo('auto')">🤖 Automático (Score)</button>
-                    <button id="modoManualBtn" class="mode-btn" onclick="setModo('manual')">👆 Manual</button>
-                    <button id="modoAPRBtn" class="mode-btn apr-high active" onclick="setModo('apr')">🔥 APR altos</button>
-                </div>
-                <div class="filter-row">
-                    <div class="filter-item"><label>TVL mínimo ($)</label><input type="number" id="filtroTVL" placeholder="ex: 10000" value="0" step="1000"></div>
-                    <div class="filter-item"><label>Volume mínimo ($)</label><input type="number" id="filtroVolume" placeholder="ex: 5000" value="0" step="1000"></div>
-                    <div class="filter-item"><label>APR mínimo (%)</label><input type="number" id="filtroAPR" placeholder="ex: 100" value="0" step="10"></div>
-                    <button class="btn-filter" onclick="aplicarFiltros()">Aplicar</button>
-                </div>
-                <!-- FEEDBACK DOS FILTROS -->
-                <div id="filterFeedback" style="font-size:11px;color:var(--text);margin:10px 0 15px 5px;min-height:16px;"></div>
-                
-                <div class="table-wrapper">
-                    <table class="pools-table" id="poolsTable">
-                        <thead>
-                            <tr>
-                                <th onclick="ordenarPor('pool')" title="Nome do par de tokens (ex: SOL/USDC)">Pool ℹ️</th>
-                                <th onclick="ordenarPor('network')" title="Blockchain onde a pool está hospedada">Network</th>
-                                <th onclick="ordenarPor('dex')" title="Exchange descentralizada (DEX) que hospeda a pool">DEX</th>
-                                <th onclick="ordenarPor('tvl')" title="Valor Total Bloqueado: soma dos dois tokens na pool">TVL</th>
-                                <th title="Proporção entre os tokens (ex: 60% SOL / 40% USDC)">Ratio</th>
-                                <th onclick="ordenarPor('volume')" title="Volume negociado nas últimas 24 horas">Volume 24h</th>
-                                <th onclick="ordenarPor('apr')" title="Retorno Anualizado Percentual: estimativa de yield">APR</th>
-                                <th title="Variação do APR na última hora">1h</th>
-                                <th title="Variação do APR nas últimas 6 horas">6h</th>
-                                <th title="Variação do APR nas últimas 24 horas">24h</th>
-                                <th title="Variação do APR nos últimos 7 dias">7d</th>
-                                <th title="Variação do APR nos últimos 30 dias">30d</th>
-                                <th onclick="ordenarPor('fee')" title="Taxa cobrada pela pool em cada swap">Fee</th>
-                                <th onclick="ordenarPor('age')" title="Tempo desde a criação da pool">Age</th>
-                                <th title="Score = 40% APR + 30% Volume + 20% TVL + 10% Antiguidade">Score ℹ️</th>
-                            </tr>
-                        </thead>
-                        <tbody id="poolsTableBody"></tbody>
-                    </table>
+
+                <!-- Botões de Ação -->
+                <div class="flex items-center gap-2">
+                    <!-- Toggle View (Feed vs Headlines) -->
+                    <button @click="view = view === 'feed' ? 'headlines' : 'feed'"
+                            class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all"
+                            :class="view === 'headlines' ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/25' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'">
+                        <i class="ph-bold" :class="view === 'feed' ? 'ph-newspaper' : 'ph-list-dashes'"></i>
+                        <span x-text="view === 'feed' ? 'Manchetes IA' : 'Feed'"></span>
+                    </button>
+
+                    <!-- Dark Mode Toggle -->
+                    <button @click="toggleTheme()" class="w-10 h-10 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-colors text-yellow-400">
+                        <i class="ph-fill" :class="isDark ? 'ph-moon-stars' : 'ph-sun'"></i>
+                    </button>
                 </div>
             </div>
 
-            <!-- ABA POOLS ESTRATÉGICAS -->
-            <div id="poolsEstrategicasTab" class="tab-content">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h3 style="color: var(--gold); margin: 0;">🎯 Pools Estratégicas Selecionadas</h3>
-                    <button class="btn-atualizar" onclick="atualizarPoolsEstrategicas()">🔄 Atualizar</button>
-                </div>
-                <p style="color: var(--text); margin-bottom: 15px;">12 pools selecionadas para estratégias de alocação baseadas em MVRV. Clique no link 🔗 para acessar a pool na DEX.</p>
-                <div class="table-wrapper"><table class="pools-table" id="poolsEstrategicasTable"><thead><tr><th>Pool</th><th>Network</th><th>DEX</th><th>TVL</th><th>Ratio</th><th>Volume 24h</th><th>APR</th><th>Fee</th><th>Age</th><th>Oportunidade</th><th>Link</th></tr></thead><tbody id="poolsEstrategicasBody"></tbody></table></div>
+            <!-- Barra de Filtros (Apenas no Feed) -->
+            <div x-show="view === 'feed'" x-transition class="flex gap-2 mt-4 overflow-x-auto scrollbar-hide pb-1">
+                <template x-for="cat in categories" :key="cat.id">
+                    <button @click="filterCategory = cat.id"
+                            class="px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border"
+                            :class="filterCategory === cat.id 
+                                ? cat.activeClass 
+                                : 'bg-gray-800 text-gray-400 border-gray-700 hover:border-gray-500'">
+                        <span x-text="cat.icon"></span>
+                        <span x-text="cat.label"></span>
+                    </button>
+                </template>
             </div>
-
-            <!-- ABA NOTÍCIAS -->
-            <div id="newsTab" class="tab-content">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h3 style="color: var(--gold); margin: 0;">📅 Calendário Econômico</h3>
-                    <button class="btn-atualizar" onclick="atualizarCalendario()">🔄 Atualizar Calendário</button>
-                </div>
-                <div style="background: #0f141c; border-radius: 16px; overflow: hidden; margin-bottom: 25px;" id="calendarioContainer">
-                    <div class="tradingview-widget-container">
-                        <div class="tradingview-widget-container__widget"></div>
-                        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>{"width":"100%","height":"600","colorTheme":"dark","locale":"br"}</script>
-                    </div>
-                </div>
-                <h3 style="color: var(--gold); margin: 20px 0 15px;">📰 Principais Notícias Cripto</h3>
-                <div class="news-grid">
-                    <div class="news-card"><h4>🇧🇷 Livecoins</h4><a href="https://livecoins.com.br/" target="_blank">livecoins.com.br</a><p>Maior portal brasileiro de notícias sobre Bitcoin e criptomoedas.</p></div>
-                    <div class="news-card"><h4>📡 Cointelegraph Brasil</h4><a href="https://cointelegraph.com.br/" target="_blank">cointelegraph.com.br</a><p>Notícias atualizadas sobre o mercado cripto em português.</p></div>
-                    <div class="news-card"><h4>🌎 CoinDesk</h4><a href="https://www.coindesk.com/" target="_blank">coindesk.com</a><p>Principal fonte internacional de notícias sobre criptomoedas.</p></div>
-                </div>
-            </div>
-
-            <!-- ABA ESTRATÉGIAS -->
-            <div id="strategiesTab" class="tab-content">
-                <div class="strategy-content">
-                    <h3>🧠 Estratégia 1: Market Making Adaptativo <button class="btn-detalhe" onclick="abrirSubmodal('submodalEstrategia1')">📘 Ver detalhes</button></h3>
-                    <p>Detecta fluxo agressivo e ajusta o range ANTES do preço mover.</p>
-                    <div class="code-block"><pre>Se volume comprador > 65%: mover range para cima\nSe volume vendedor > 65%: mover range para baixo</pre></div>
-                    <hr><h3>⚡ Estratégia 2: Gamma Scalping <button class="btn-detalhe" onclick="abrirSubmodal('submodalEstrategia2')">📘 Ver detalhes</button></h3>
-                    <p>Usa LP como posição delta neutra e faz hedge via trade.</p>
-                    <hr><h3>🧬 Estratégia 3: Liquidity Sniping <button class="btn-detalhe" onclick="abrirSubmodal('submodalEstrategia3')">📘 Ver detalhes</button></h3>
-                    <p>Entrar ANTES da massa em pools novas com APR alto.</p>
-                    <hr><h3>🧮 Estratégia 4: Range baseado em Volatilidade <button class="btn-detalhe" onclick="abrirSubmodal('submodalEstrategia4')">📘 Ver detalhes</button></h3>
-                    <p>Range = Preço atual ± (ATR × fator)</p>
-                    <hr><h3>🧠 Estratégia 5: Regime de Mercado <button class="btn-detalhe" onclick="abrirSubmodal('submodalEstrategia5')">📘 Ver detalhes</button></h3>
-                    <ul><li><span class="strategy-badge">🟢 Bull</span> → range aberto</li><li><span class="strategy-badge">🔴 Bear</span> → foco em stable</li><li><span class="strategy-badge">🟡 Sideways</span> → range curto</li></ul>
-                    <hr><h3>🧠 Estratégia 6: Rebalanceamento por Delta <button class="btn-detalhe" onclick="abrirSubmodal('submodalEstrategia6')">📘 Ver detalhes</button></h3>
-                    <p>Mantém exposição ideal (ex: 60% BTC / 40% USDC).</p>
-                    <hr><h3>🧠 Estratégia 7: Stop Loss Inteligente <button class="btn-detalhe" onclick="abrirSubmodal('submodalEstrategia7')">📘 Ver detalhes</button></h3>
-                    <p>Remove liquidez quando preço sai do range + tendência forte.</p>
-                    <hr><h3>🧠 Estratégia 8: Multi-Pool Optimization <button class="btn-detalhe" onclick="abrirSubmodal('submodalEstrategia8')">📘 Ver detalhes</button></h3>
-                    <p>Divide capital em várias pools (stable, volátil, high APR).</p>
-                    <hr><h3>🧠 Estratégia 9: Arbitragem entre Pools <button class="btn-detalhe" onclick="abrirSubmodal('submodalEstrategia9')">📘 Ver detalhes</button></h3>
-                    <p>Lucra com diferenças de preço entre pools.</p>
-                    <hr><h3>🧠 Estratégia 10: Fee Harvesting Automático <button class="btn-detalhe" onclick="abrirSubmodal('submodalEstrategia10')">📘 Ver detalhes</button></h3>
-                    <p>Retira taxas periodicamente e reinveste.</p>
-                    <hr><h3>🧠 Estratégia 11: Liquidez Direcional <button class="btn-detalhe" onclick="abrirSubmodal('submodalEstrategia11')">📘 Ver detalhes</button></h3>
-                    <p>Range deslocado para apostar na direção.</p>
-                    <hr><h3>🧠 Estratégia 12: Machine Learning <button class="btn-detalhe" onclick="abrirSubmodal('submodalEstrategia12')">📘 Ver detalhes</button></h3>
-                    <p>Treina modelo para decidir melhor range.</p>
-                    <hr><h3>🧠 Estratégia 13: Coin-M Inverse Long <button class="btn-detalhe" onclick="abrirSubmodal('submodalEstrategia13')">📘 Ver detalhes</button></h3>
-                    <p>Opera contratos inversos na Binance.</p>
-                    <hr><h2>🔥 O MAIS IMPORTANTE (segredo profissional)</h2>
-                    <p>Não use só 1 estratégia – crie um <strong>Strategy Router</strong>.</p>
-                    <div class="code-block"><pre>if market == "trend": use_trend_strategy()\nelif market == "volatile": use_gamma_scalping()\nelif market == "crash": move_to_stable()\nelif market == "sideways": maximize_fees()</pre></div>
-                    <h2>💰 Alocação Ideal</h2>
-                    <ul><li><strong>50% → LP principal (SOL/USDC)</strong></li><li><strong>25% → LP secundária (BTC/USDC)</strong></li><li><strong>25% → Caixa (USDC livre)</strong></li></ul>
-                    <h3>📉 DCA Inteligente</h3>
-                    <div class="code-block"><pre>-3% → compra 10%\n-6% → compra 20%\n-10% → compra 30%\n+4% → vende 15%\n+8% → vende 25%\n+12% → vende 30%</pre></div>
-                    <h3>🔴 Modo Crise</h3>
-                    <p>Remover todas LPs, converter para USDC, ativar DCA de fundo.</p>
-                </div>
-            </div>
-
-            <!-- ABA ROBÔ -->
-            <div id="robotTab" class="tab-content"><div class="robot-content"><h3>🤖 Bot de Liquidez Automatizado (Solana)</h3><p>Gerencia posição de liquidez em pool CLMM na Solana.</p><ul><li>🔵 Adicionar liquidez com range ±10%</li><li>⚡ Auto-ajuste se preço variar >5%</li><li>🚨 Modo Crash: remove liquidez se preço cair >8%</li></ul><h4>⚙️ Como usar</h4><p>Instale <code>npm install @solana/web3.js axios dotenv @orca-so/whirlpools-sdk</code>, configure .env e execute.</p></div></div>
-
-            <!-- ABA MVRV CYCLE -->
-            <div id="mvrvTab" class="tab-content"><div class="strategy-content"><h3>📈 MVRV Ratio (Market Value / Realized Value)</h3><div class="mvrv-card"><div style="display:flex;justify-content:space-between;margin-bottom:15px;"><span>📊 MVRV Total</span><span id="mvrvValue" class="mvrv-value" style="color:var(--green);">1.29</span></div><div class="score-bar"><div id="mvrvFill" class="score-fill" style="width:32%;background:linear-gradient(90deg,#ff3e3e,#ffcc00,#00ff88);"></div></div><div style="display:flex;justify-content:space-between;margin:20px 0 10px;"><span>👤 STH MVRV (Short Term)</span><span id="sthValue" style="color:var(--orange);font-weight:bold;">0.83</span></div><div class="score-bar"><div id="sthFill" class="score-fill" style="width:28%;background:#ff3e3e;"></div></div><div style="display:flex;justify-content:space-between;margin:20px 0 10px;"><span>🧓 LTH MVRV (Long Term)</span><span id="lthValue" style="color:var(--green);font-weight:bold;">1.29</span></div></div><div class="modo-operacao" style="margin:15px 0;"><span>🎯 Regime de Mercado:</span><span id="regimeText" style="color:var(--gold);font-weight:bold;">ACUMULAÇÃO</span></div><div class="alarme-section" style="border-color:var(--green);"><div class="alarme-title">⚡ Recomendação Estratégica</div><p id="mvrvRecomendacao">STH MVRV abaixo de 1 = capitulação. Zona de compra agressiva.</p></div><details class="guide-box" open><summary>📘 ENTENDENDO O MVRV (Para Iniciantes)</summary><p><strong>O que significa?</strong> M = preço atual, R = preço médio pago, V = razão. Mostra se o Bitcoin está caro ou barato.</p><p><strong>🟢 Zona Verde (MVRV < 1,2):</strong> Barato, oportunidade de compra.</p><p><strong>🟡 Zona Amarela (1,2 a 2,5):</strong> Equilibrado, acumule aos poucos.</p><p><strong>🔴 Zona Vermelha (> 2,5):</strong> Caro, risco de topo, realize lucros.</p><p><strong>👤 STH MVRV:</strong> Investidores de curto prazo. Abaixo de 1 = capitulação (compra). Acima de 1,4 = euforia (risco).</p><p><strong>💡 Como usar:</strong> MVRV baixo + STH abaixo de 1 = COMPRA FORTE. MVRV alto + STH acima de 1,4 = REALIZAR LUCROS.</p></details>
-            <button class="btn-calc" onclick="atualizarMVRV()">🔄 ATUALIZAR DADOS MVRV</button>
-            <!-- FONTE DOS DADOS MVRV -->
-            <div style="font-size:10px;color:var(--text);text-align:center;margin-top:15px;padding:10px;background:#0d151f;border-radius:12px;border:1px dashed #3d4d62;">
-                📊 <strong>Nota:</strong> Dados simulados para demonstração educativa.<br>
-                Fontes reais recomendadas: 
-                <a href="https://lookintobitcoin.com" target="_blank" style="color:var(--accent)">LookIntoBitcoin</a> • 
-                <a href="https://glassnode.com" target="_blank" style="color:var(--accent)">Glassnode</a> • 
-                <a href="https://cryptoquant.com" target="_blank" style="color:var(--accent)">CryptoQuant</a>
-            </div>
-        </div></div>
-
-            <!-- ABA INDICADORES DE CICLO -->
-            <div id="cicloTab" class="tab-content"><div class="strategy-content"><h3>📈 Indicadores de Ciclo do Bitcoin</h3><div class="grid-2"><div class="indicator-card"><div class="indicator-label">📊 MVRV</div><input type="number" id="inputMVRV" class="indicator-input" value="1.29" step="0.01" onchange="calcularScoreCiclo()"><div class="indicator-label" style="font-size:10px;">&lt;1 = barato | &gt;3.5 = caro</div><button class="btn-detalhe" style="margin-top:6px;" onclick="abrirSubmodal('submodalCicloDetalhes')">📘 Detalhes</button></div><div class="indicator-card"><div class="indicator-label">📈 NUPL (Lucro/Prejuízo não realizado)</div><input type="number" id="inputNUPL" class="indicator-input" value="0.30" step="0.01" onchange="calcularScoreCiclo()"><div class="indicator-label" style="font-size:10px;">&lt;0.25 = capitulação | &gt;0.6 = euforia</div><button class="btn-detalhe" style="margin-top:6px;" onclick="abrirSubmodal('submodalCicloDetalhes')">📘 Detalhes</button></div><div class="indicator-card"><div class="indicator-label">🔥 SOPR (Lucro/Prejuízo realizado)</div><input type="number" id="inputSOPR" class="indicator-input" value="1.00" step="0.01" onchange="calcularScoreCiclo()"><div class="indicator-label" style="font-size:10px;">&lt;1 = prejuízo (compra) | &gt;1.1 = lucro (venda)</div><button class="btn-detalhe" style="margin-top:6px;" onclick="abrirSubmodal('submodalCicloDetalhes')">📘 Detalhes</button></div><div class="indicator-card"><div class="indicator-label">🏦 Realized Price (Preço médio de compra)</div><input type="number" id="inputRealizedPrice" class="indicator-input" value="20000" step="1000" onchange="calcularScoreCiclo()"><div class="indicator-label" style="font-size:10px;">Preço abaixo = oportunidade</div><button class="btn-detalhe" style="margin-top:6px;" onclick="abrirSubmodal('submodalCicloDetalhes')">📘 Detalhes</button></div><div class="indicator-card"><div class="indicator-label">📉 RHODL Ratio</div><input type="number" id="inputRHODL" class="indicator-input" value="2000" step="100" onchange="calcularScoreCiclo()"><div class="indicator-label" style="font-size:10px;">&lt;1000 = acumulação | &gt;5000 = topo</div><button class="btn-detalhe" style="margin-top:6px;" onclick="abrirSubmodal('submodalCicloDetalhes')">📘 Detalhes</button></div><div class="indicator-card"><div class="indicator-label">⛏️ Puell Multiple (Receita mineradores)</div><input type="number" id="inputPuell" class="indicator-input" value="0.8" step="0.1" onchange="calcularScoreCiclo()"><div class="indicator-label" style="font-size:10px;">&lt;0.5 = fundo | &gt;3 = topo</div><button class="btn-detalhe" style="margin-top:6px;" onclick="abrirSubmodal('submodalCicloDetalhes')">📘 Detalhes</button></div></div><div class="mvrv-card" style="text-align:center;"><div style="display:flex;justify-content:center;align-items:center;margin-bottom:15px;"><span id="semaforoIcon" class="semaforo semaforo-amarelo"></span><span id="sinalTexto" style="font-size:24px;font-weight:bold;">NEUTRO</span></div><div class="score-grande" id="scoreCiclo">0</div><div class="indicator-label">SCORE TOTAL</div><div id="recomendacaoCiclo" style="margin-top:15px;padding:12px;background:#0d151f;border-radius:12px;">Preencha os valores acima para calcular</div></div><button class="btn-calc" onclick="calcularScoreCiclo()">🔄 CALCULAR SCORE</button></div></div>
-
-            <!-- ABA AUTO LIQUIDITY -->
-            <div id="liquidityTab" class="tab-content"><div class="strategy-content"><h3>🤖 AUTO LIQUIDITY</h3><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;"><div class="mode-toggle" style="margin-bottom:0;"><button id="modoAutoLiquidityBtn" class="mode-btn active" onclick="setModoLiquidity('auto')">🤖 Automático (MVRV)</button><button id="modoManualLiquidityBtn" class="mode-btn" onclick="setModoLiquidity('manual')">👆 Manual</button></div><button class="btn-atualizar" onclick="atualizarAPRsAutoLiquidity()">🔄 Atualizar APRs</button></div><div id="liquidityAutoContent"><div class="mvrv-card"><div><span>📊 Regime MVRV Atual:</span><span id="liquidityRegime" style="color:var(--gold);font-weight:bold;margin-left:10px;">ACUMULAÇÃO</span></div><div><span>🎯 Estratégia Ativa:</span><span id="liquidityStrategy" style="color:var(--green);margin-left:10px;">Alto APR com crescimento</span></div></div><h4>💰 Alocação Recomendada (base R$10.000)</h4><div id="alocacaoLista" class="alocacao-lista"></div></div><div id="liquidityManualContent" style="display:none;"><h4>📋 Selecione as pools e defina os percentuais</h4><div id="poolsManualLista"></div><div class="alarme-section"><div class="alarme-title">📊 Resumo da Carteira</div><div id="resumoManual" style="font-size:12px;">Total: 0%</div><button class="btn-calc" onclick="salvarCarteiraManual()">💾 SALVAR CONFIGURAÇÃO</button></div></div><h4 style="margin-top:20px;">🔮 Simulação de Retorno</h4><div class="grid-2"><div><label>Valor (USDC)</label><input type="number" id="simularValor" class="simulador-input" value="10000" step="1000"></div><div><label>Período (dias)</label><input type="number" id="simularDias" class="simulador-input" value="30" step="30" min="1"></div></div><button class="btn-calc" onclick="simularRetorno()">📈 SIMULAR RETORNO</button><div id="simulacaoResultado" style="background:#0d151f;border-radius:16px;padding:15px;margin:10px 0;text-align:center;">Clique em SIMULAR para ver o retorno estimado</div><button class="copy-strategy-btn" onclick="copiarEstrategia()">📋 COPIAR ESTRATÉGIA</button><h4 style="margin-top:20px;">📜 Histórico de Regimes</h4><div id="historicoRegimes" style="background:#0d151f;border-radius:12px;padding:12px;font-size:12px;">• Hoje: ACUMULAÇÃO → foco em SOL/HYPE/NVDA<br>• Ontem: ACUMULAÇÃO → mesma estratégia<br>• 2 dias: NEUTRO → mais USDC/USDT</div></div></div>
         </div>
-    </div>
+    </header>
 
-    <!-- Submodal para detalhes dos indicadores de ciclo -->
-    <div id="submodalCicloDetalhes" class="submodal"><div class="submodal-content"><h2>📘 Entendendo os Indicadores de Ciclo</h2>
-        <h3>📊 MVRV (Market Value / Realized Value)</h3><p>Compara o preço atual com o preço médio de compra de todos os BTC. Valores abaixo de 1 indicam que o ativo está barato (oportunidade de compra), valores acima de 3,5 indicam risco de topo.</p>
-        <h3>📈 NUPL (Net Unrealized Profit/Loss)</h3><p>Mede o lucro ou prejuízo não realizado de toda a rede. Abaixo de 0,25 = capitulação (medo extremo, bom momento para comprar). Acima de 0,6 = euforia (risco de topo).</p>
-        <h3>🔥 SOPR (Spent Output Profit Ratio)</h3><p>Mostra se as moedas estão sendo vendidas com lucro ou prejuízo. SOPR &lt; 1 = vendas com prejuízo (capitulação, oportunidade). SOPR &gt; 1,1 = realização de lucro (risco).</p>
-        <h3>🏦 Realized Price</h3><p>Preço médio de compra de todos os BTC. Quando o preço atual está abaixo desse valor, temos uma zona de oportunidade histórica.</p>
-        <h3>📉 RHODL Ratio</h3><p>Compara a atividade de holders antigos vs novos. Valores baixos indicam acumulação (fundo), valores altos indicam mercado superaquecido (topo).</p>
-        <h3>⛏️ Puell Multiple</h3><p>Mede a receita dos mineradores em relação à média histórica. Puell &lt; 0,5 = mineradores capitulando (fundo). Puell &gt; 3 = pressão de venda (topo).</p>
-        <p><strong>Como usar na prática:</strong> Combine os indicadores. Se MVRV baixo + NUPL em capitulação + SOPR &lt; 1, é um forte sinal de fundo. Se MVRV alto + NUPL em euforia + RHODL alto, é hora de realizar lucros.</p>
-        <div class="button-group"><button class="close-btn" onclick="fecharSubmodal('submodalCicloDetalhes')">Fechar</button></div></div></div>
+    <!-- ================= CONTEÚDO PRINCIPAL ================= -->
+    <main class="max-w-6xl mx-auto px-4 py-6 min-h-screen">
+        
+        <!-- Loading State -->
+        <div x-show="loading" class="flex flex-col items-center justify-center py-20 text-gray-500">
+            <i class="ph-bold ph-spinner animate-spin text-4xl mb-4 text-blue-500"></i>
+            <p>Buscando notícias globais...</p>
+        </div>
 
-    <script src="https://s3.tradingview.com/tv.js"></script>
+        <!-- Mensagem de Erro -->
+        <div x-show="error && !loading" class="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm flex items-center gap-2">
+            <i class="ph-bold ph-warning-circle text-lg"></i>
+            <span x-text="error"></span>
+        </div>
+
+        <!-- VISTA: FEED DE NOTÍCIAS -->
+        <div x-show="view === 'feed' && !loading" x-cloak class="grid grid-cols-1 gap-4">
+            <template x-for="news in filteredNews" :key="news.id">
+                <a :href="news.url" target="_blank" class="group block bg-gray-900/40 border border-gray-800 rounded-xl overflow-hidden hover:border-blue-500/50 hover:bg-gray-800/50 transition-all duration-200 relative">
+                    
+                    <!-- Tag de Score (HOT) -->
+                    <div x-show="news.score >= 10" class="absolute top-4 right-4 bg-orange-500/20 text-orange-400 border border-orange-500/30 text-[10px] font-bold px-2 py-1 rounded-md z-10 flex items-center gap-1">
+                        <i class="ph-fill ph-fire"></i> HOT
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row">
+                        <!-- Thumbnail -->
+                        <div class="w-full sm:w-48 h-48 sm:h-auto relative shrink-0 bg-gray-800">
+                            <img :src="news.image || 'https://placehold.co/400x300/111/444?text=Crypto'" 
+                                 alt="News Image"
+                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                 @error="$event.target.style.display='none'">
+                        </div>
+                        
+                        <!-- Conteúdo -->
+                        <div class="p-5 flex flex-col justify-between flex-1">
+                            <div>
+                                <!-- Metadados -->
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
+                                          :class="news.categoryColors">
+                                        <span x-text="news.categoryLabel"></span>
+                                    </span>
+                                    <span class="text-gray-500 text-xs flex items-center gap-1">
+                                        <i class="ph ph-clock"></i>
+                                        <span x-text="timeAgo(news.date)"></span>
+                                    </span>
+                                </div>
+
+                                <!-- Título -->
+                                <h2 class="text-lg font-bold text-gray-100 group-hover:text-blue-400 transition-colors mb-2 leading-tight"
+                                    x-text="news.title"></h2>
+                                
+                                <!-- Descrição (Opcional) -->
+                                <p x-show="news.desc" class="text-sm text-gray-400 line-clamp-2 mb-4"
+                                   x-text="news.desc"></p>
+                            </div>
+
+                            <!-- Rodapé do Card -->
+                            <div class="flex items-center justify-between mt-auto pt-3 border-t border-gray-800/50">
+                                <span class="text-xs font-semibold text-gray-300 flex items-center gap-1">
+                                    <i class="ph-bold ph-broadcast"></i>
+                                    <span x-text="news.source"></span>
+                                </span>
+                                <span class="text-xs text-blue-500 font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    Ler Original <i class="ph-bold ph-arrow-right"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </template>
+
+            <!-- Empty State -->
+            <div x-show="filteredNews.length === 0" class="text-center py-12 text-gray-500">
+                <i class="ph-duotone ph-magnifying-glass text-4xl mb-3"></i>
+                <p>Nenhuma notícia encontrada para esta categoria.</p>
+            </div>
+        </div>
+
+        <!-- VISTA: MANCHETES PARA IA -->
+        <div x-show="view === 'headlines' && !loading" x-cloak class="max-w-4xl mx-auto">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-1">🤖 Painel de Manchetes</h2>
+                    <p class="text-sm text-gray-400">Copie títulos limpos para gerar imagens ou textos com IA.</p>
+                </div>
+                <div class="flex gap-2">
+                    <button @click="refreshNews()" class="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-400 transition-colors" title="Atualizar">
+                        <i class="ph-bold ph-arrows-clockwise" :class="{'animate-spin': loading}"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Ações Rápidas -->
+            <div class="flex gap-3 mb-6">
+                <button @click="copyAllTitles()" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-colors shadow-lg shadow-green-500/10">
+                    <i class="ph-bold ph-copy"></i> Copiar Tudo
+                </button>
+                <button @click="generatePrompt()" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-colors shadow-lg shadow-purple-500/10">
+                    <i class="ph-bold ph-magic-wand"></i> Gerar Prompt IA
+                </button>
+            </div>
+
+            <!-- Lista de Manchetes -->
+            <div class="bg-gray-900/50 border border-gray-800 rounded-xl p-6">
+                <div class="space-y-6">
+                    <template x-for="group in groupedHeadlines" :key="group.cat">
+                        <div class="space-y-2">
+                            <h3 class="text-xs font-bold uppercase tracking-widest text-gray-500 border-b border-gray-800 pb-2 mb-3">
+                                <span x-text="group.icon"></span>
+                                <span x-text="group.label"></span>
+                            </h3>
+                            <template x-for="(item, index) in group.items" :key="index">
+                                <div @click="copySingle(item.title)" 
+                                     class="group flex items-start gap-3 p-2 rounded hover:bg-gray-800/50 cursor-pointer transition-colors"
+                                     title="Clique para copiar">
+                                    <span class="text-gray-600 font-mono mt-0.5 text-xs" x-text="index + 1 + '.'"></span>
+                                    <span class="text-sm text-gray-300 group-hover:text-white transition-colors flex-1" x-text="item.title"></span>
+                                    <i class="ph ph-copy text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            
+            <!-- Feedback Toast -->
+            <div x-show="toast.visible" x-transition 
+                 class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white text-black px-6 py-3 rounded-full shadow-xl font-medium text-sm z-50 flex items-center gap-2">
+                <i class="ph-fill ph-check-circle text-green-600"></i>
+                <span x-text="toast.message"></span>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800 py-6 mt-auto text-center">
+        <p class="text-xs text-gray-600">
+            CryptoNews Pro &copy; 2026 • Atualização automática a cada 15min • Dados simulados para demonstração
+        </p>
+    </footer>
+
+    <!-- ================= LÓGICA JAVASCRIPT ================= -->
     <script>
-        // ========== VARIÁVEIS GLOBAIS ==========
-        let price = 67728.12;
-        let pricesHistory = [];
-        let ema50 = 0;
-        let isDesktop = false;
-        let currentTF = "1";
-        let activeWS = null;
-        let alarmes = [];
-        let modoOperacaoAtivo = false;
-        let timeoutDescanso;
-        let metalInterval = null;
-        let lastValidPrice = { GOLD: null, SILVER: null, WTI: null };
-        let mvrvData = { total: 1.29, sth: 0.83, lth: 1.29, regime: 'ACUMULAÇÃO', recomendacao: 'STH MVRV abaixo de 1 = capitulação. Zona de compra agressiva.' };
-        
-        // AUTO-UPDATE VARIABLES
-        let autoUpdateInterval = 15; // minutes (default)
-        let autoUpdateTimer = null;
-        let countdownTimer = null;
-        let lastUpdateTime = null;
-        let nextUpdateTime = null;
-        
-        // POOLS SEPARADAS POR CATEGORIA (SEM REPETIÇÃO)
-        const poolsBlueChip = [
-            { pool: "USD1/WBNB", network: "Bsc", dex: "PancakeSwap V3", tvl: "20.6K", ratio: "16/84", volume: "2.21M", apr: "390.6%", fee: "0.05%", age: "1m" },
-            { pool: "SOL/USDC", network: "Base", dex: "Aerodrome Slipstream", tvl: "220.3K", ratio: "59/41", volume: "4.73M", apr: "274.1%", fee: "0.03%", age: "40m" },
-            { pool: "WETH/USDC", network: "Base", dex: "Aerodrome Slipstream", tvl: "387.2K", ratio: "75/27", volume: "3.12M", apr: "173.6%", fee: "0.06%", age: "1m" },
-            { pool: "WBTC/WETH", network: "Ethereum", dex: "Uniswap V3", tvl: "231.6K", ratio: "46/54", volume: "1.33M", apr: "15.2%", fee: "0.30%", age: "2y" },
-            { pool: "WBTC/USDC", network: "Arbitrum", dex: "Uniswap V3", tvl: "8.08M", ratio: "72/28", volume: "11.14M", apr: "8.5%", fee: "0.05%", age: "1y" }
-        ];
-        
-        const poolsStableCoin = [
-            { pool: "USDT/USDC", network: "Solana", dex: "Raydium Concentrated", tvl: "1.3M", ratio: "55/45", volume: "7.8M", apr: "487.3%", fee: "0.25%", age: "2m" },
-            { pool: "USDC/USDT", network: "Ethereum", dex: "Uniswap V3", tvl: "100M", ratio: "50/50", volume: "500M", apr: "21.1%", fee: "0.01%", age: "1y" },
-            { pool: "DAI/USDC", network: "Arbitrum", dex: "Uniswap V3", tvl: "30M", ratio: "50/50", volume: "80M", apr: "4.3%", fee: "0.01%", age: "6mo" },
-            { pool: "EURC/USDC", network: "Solana", dex: "Raydium Concentrated", tvl: "50M", ratio: "50/50", volume: "100M", apr: "29.9%", fee: "0.05%", age: "3mo" },
-            { pool: "USDe/USDC", network: "Ethereum", dex: "Curve", tvl: "20M", ratio: "50/50", volume: "40M", apr: "1.5%", fee: "0.01%", age: "2mo" }
-        ];
-        
-        const poolsRWA = [
-            { pool: "COINX/USDC", network: "Solana", dex: "Raydium Concentrated", tvl: "286.8K", ratio: "87/13", volume: "270.7K", apr: "344.5%", fee: "1.00%", age: "2mo" },
-            { pool: "SLVON/WETH", network: "Ethereum", dex: "Uniswap V3", tvl: "3.5K", ratio: "91/9", volume: "9.5K", apr: "300.1%", fee: "0.30%", age: "1mo" },
-            { pool: "TQQQx/USDC", network: "Solana", dex: "Raydium Concentrated", tvl: "2.6K", ratio: "51/49", volume: "458", apr: "259.6%", fee: "4.00%", age: "17d" },
-            { pool: "SLVON/USDC", network: "Ethereum", dex: "Uniswap V3", tvl: "161.3K", ratio: "79/21", volume: "247.6K", apr: "168.1%", fee: "0.30%", age: "2y" },
-            { pool: "HOODX/SOL", network: "Solana", dex: "Raydium Concentrated", tvl: "437.2K", ratio: "35/65", volume: "190.3K", apr: "158.8%", fee: "1.00%", age: "8mo" }
-        ];
-        
-        const poolsReal = [
-            { pool: "BRL/USDC", network: "Polygon", dex: "QuickSwap", tvl: "40K", ratio: "55/45", volume: "100K", apr: "17.46%", fee: "0.20%", age: "1y" },
-            { pool: "BRL/USDT", network: "Bsc", dex: "PancakeSwap V3", tvl: "15K", ratio: "65/35", volume: "30K", apr: "8.44%", fee: "0.25%", age: "10mo" },
-            { pool: "BRL/AUSD", network: "Arbitrum", dex: "Camelot", tvl: "10K", ratio: "70/30", volume: "20K", apr: "12.25%", fee: "0.30%", age: "8mo" },
-            { pool: "BRZ/USDC", network: "Polygon", dex: "QuickSwap", tvl: "25K", ratio: "60/40", volume: "50K", apr: "8.10%", fee: "0.25%", age: "1y" },
-            { pool: "BRL/USDT", network: "Ethereum", dex: "Uniswap V3", tvl: "12K", ratio: "60/40", volume: "25K", apr: "13.56%", fee: "0.30%", age: "7mo" }
-        ];
-        
-        // Array completo para a tabela principal (todas as pools sem repetição)
-        let poolsData = [
-            ...poolsBlueChip,
-            ...poolsStableCoin,
-            ...poolsRWA,
-            ...poolsReal
-        ];
-        
-        let poolsEstrategicas = [
-            { pool: "SOL/USDC", network: "Solana", dex: "Meteora DLMM", tvl: "220.3K", ratio: "59/41", volume: "4.73M", apr: "274.1%", fee: "0.03%", age: "40m", link: "https://app.meteora.ag/pool/SOL-USDC" },
-            { pool: "HYPE/USDC", network: "Solana", dex: "Meteora DLMM", tvl: "80.8K", ratio: "55/45", volume: "76.5K", apr: "224.7%", fee: "0.65%", age: "3mo", link: "https://app.meteora.ag/pool/HYPE-USDC" },
-            { pool: "USDC/USDT", network: "Ethereum", dex: "Uniswap V3", tvl: "100K", ratio: "50/50", volume: "500K", apr: "21.1%", fee: "0.01%", age: "1y", link: "https://app.uniswap.org/pools" },
-            { pool: "BTC/USDC", network: "Base", dex: "Aerodrome Slipstream", tvl: "387.2K", ratio: "75/27", volume: "3.12M", apr: "45.3%", fee: "0.06%", age: "1m", link: "https://aerodrome.finance/pools" },
-            { pool: "ETH/USDC", network: "Arbitrum", dex: "Uniswap V3", tvl: "121.8K", ratio: "63/37", volume: "213.1K", apr: "38.7%", fee: "0.30%", age: "2y", link: "https://app.uniswap.org/pools" },
-            { pool: "WBTC/WETH", network: "Ethereum", dex: "Uniswap V3", tvl: "10.5K", ratio: "79/21", volume: "4.5K", apr: "18.5%", fee: "1.00%", age: "2y", link: "https://app.uniswap.org/pools" },
-            { pool: "cbBTC/SOL", network: "Solana", dex: "Meteora DLMM", tvl: "51.3K", ratio: "42/58", volume: "730.0K", apr: "155.8%", fee: "0.03%", age: "4mo", link: "https://app.meteora.ag/pool/cbBTC-SOL" },
-            { pool: "COINX/USDC", network: "Solana", dex: "Raydium Concentrated", tvl: "286.8K", ratio: "87/13", volume: "270.7K", apr: "344.5%", fee: "1.00%", age: "2mo", link: "https://raydium.io/pools" },
-            { pool: "NVDAX/USDC", network: "Solana", dex: "Raydium Concentrated", tvl: "39.9K", ratio: "53/47", volume: "64.2K", apr: "146.9%", fee: "0.25%", age: "19d", link: "https://raydium.io/pools" },
-            { pool: "AAPL/USDC", network: "Solana", dex: "Raydium", tvl: "25.0K", ratio: "60/40", volume: "45.0K", apr: "82.4%", fee: "0.30%", age: "6mo", link: "https://raydium.io/pools" },
-            { pool: "MSFT/USDC", network: "Solana", dex: "Raydium", tvl: "22.0K", ratio: "58/42", volume: "38.0K", apr: "75.6%", fee: "0.30%", age: "6mo", link: "https://raydium.io/pools" },
-            { pool: "TQQQx/USDC", network: "Solana", dex: "Raydium Concentrated", tvl: "2.6K", ratio: "51/49", volume: "458", apr: "259.6%", fee: "4.00%", age: "17d", link: "https://raydium.io/pools" }
-        ];
-        
-        let modoAtual = 'apr';
-        let filtros = { tvlMin: 0, volMin: 0, aprMin: 0 };
-        let ordenacaoAtual = { coluna: 'apr', direcao: 'desc' };
-        let searchTerm = '';
-        let modoLiquidity = 'auto';
-        let carteiraManual = {};
-        
-        // ========== AUTO-UPDATE FUNCTIONS ==========
-        function setUpdateInterval(minutes) {
-            autoUpdateInterval = minutes;
-            // Update active button
-            document.querySelectorAll('.interval-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if(btn.textContent.includes(minutes === 60 ? '1h' : minutes + 'min')) {
-                    btn.classList.add('active');
-                }
-            });
-            // Restart timers
-            startAutoUpdate();
-        }
-        
-        function updateLastUpdateTime() {
-            const now = new Date();
-            lastUpdateTime = now;
-            nextUpdateTime = new Date(now.getTime() + autoUpdateInterval * 60000);
-            
-            const timeStr = now.toLocaleTimeString('pt-BR');
-            document.getElementById('lastUpdateTime').textContent = timeStr;
-        }
-        
-        function updateCountdown() {
-            if(!nextUpdateTime) return;
-            
-            const now = new Date();
-            const diff = nextUpdateTime - now;
-            
-            if(diff <= 0) {
-                // Time to update!
-                atualizarPoolsCompleto();
-                updateLastUpdateTime();
-                return;
-            }
-            
-            const minutes = Math.floor(diff / 60000);
-            const seconds = Math.floor((diff % 60000) / 1000);
-            const countdownStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            document.getElementById('countdownTimer').textContent = countdownStr;
-        }
-        
-        function startAutoUpdate() {
-            // Clear existing timers
-            if(autoUpdateTimer) clearInterval(autoUpdateTimer);
-            if(countdownTimer) clearInterval(countdownTimer);
-            
-            // Update immediately on start
-            updateLastUpdateTime();
-            
-            // Start countdown timer (updates every second)
-            countdownTimer = setInterval(updateCountdown, 1000);
-            
-            // Start auto-update timer
-            autoUpdateTimer = setInterval(() => {
-                atualizarPoolsCompleto();
-                updateLastUpdateTime();
-            }, autoUpdateInterval * 60000);
-        }
-        
-        // ========== FUNÇÕES AUXILIARES ==========
-        function abrirSubmodal(id) { document.getElementById(id).style.display = 'flex'; }
-        function fecharSubmodal(id) { document.getElementById(id).style.display = 'none'; }
-        function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
-        function copyText(text) { navigator.clipboard.writeText(text).then(() => alert('✅ Copiado!')).catch(() => alert('❌ Erro ao copiar.')); }
-        
-        function getRiskLevel(pool) {
-            const tvlNum = parseFloat(pool.tvl) * (pool.tvl.includes('K') ? 1e3 : (pool.tvl.includes('M') ? 1e6 : 1));
-            const volNum = parseFloat(pool.volume) * (pool.volume.includes('K') ? 1e3 : (pool.volume.includes('M') ? 1e6 : 1));
-            const aprNum = parseFloat(pool.apr);
-            let ageDays = 0;
-            if (pool.age.includes('d')) ageDays = parseFloat(pool.age);
-            else if (pool.age.includes('mo')) ageDays = parseFloat(pool.age) * 30;
-            else if (pool.age.includes('y')) ageDays = parseFloat(pool.age) * 365;
-            else if (pool.age.includes('m')) ageDays = parseFloat(pool.age);
-            if (tvlNum > 100000 && volNum > 100000 && aprNum < 200 && ageDays > 30) return { emoji: '🟢', class: 'risk-verde', text: 'Baixo risco' };
-            if (tvlNum > 10000 && volNum > 10000 && aprNum < 400) return { emoji: '🟡', class: 'risk-amarelo', text: 'Risco médio' };
-            return { emoji: '🔴', class: 'risk-vermelho', text: 'Alto risco' };
-        }
-        
-        function calcularRegimeMVRV(mvrv, sth) {
-            if (mvrv < 1.2 && sth < 0.95) return { regime: 'COMPRA_FORTE', cor: '#00ff88', msg: '🔥 Zona de compra forte! Aumente agressividade.', strategy: 'Máxima agressividade - foco em blue chips' };
-            if (mvrv < 1.5) return { regime: 'ACUMULAÇÃO', cor: '#ffcc00', msg: '📈 Zona de acumulação. Operações normais com viés de alta.', strategy: 'Alto APR com crescimento - SOL/HYPE/NVDA' };
-            if (mvrv < 2.5) return { regime: 'NEUTRO', cor: '#8b949e', msg: '⚖️ Zona neutra. Opere com cautela.', strategy: 'Diversificação - stable + blue chips' };
-            if (mvrv < 3.5) return { regime: 'REALIZAÇÃO', cor: '#ff9900', msg: '🔴 Zona de realização. Reduza posições.', strategy: 'Redução de risco - foco em stable pools' };
-            return { regime: 'TOPO', cor: '#ff3e3e', msg: '⚠️ Zona de topo! Evite compras.', strategy: 'Apenas stablecoins - aguardar queda' };
-        }
-        
-        function atualizarMVRV() {
-            // Feedback visual no botão
-            const btnMVRV = document.querySelector('#mvrvTab .btn-calc');
-            if(btnMVRV) {
-                const originalText = btnMVRV.innerHTML;
-                btnMVRV.innerHTML = '🔄 Atualizando...';
-                btnMVRV.disabled = true;
-                setTimeout(() => { btnMVRV.innerHTML = originalText; btnMVRV.disabled = false; }, 1000);
-            }
-            const regimeObj = calcularRegimeMVRV(mvrvData.total, mvrvData.sth);
-            mvrvData.regime = regimeObj.regime;
-            mvrvData.recomendacao = regimeObj.msg;
-            const el1 = document.getElementById('mvrvValue'); if(el1) el1.innerText = mvrvData.total;
-            const el2 = document.getElementById('sthValue'); if(el2) el2.innerText = mvrvData.sth;
-            const el3 = document.getElementById('lthValue'); if(el3) el3.innerText = mvrvData.lth;
-            const el4 = document.getElementById('regimeText'); if(el4) el4.innerText = mvrvData.regime;
-            const el5 = document.getElementById('mvrvRecomendacao'); if(el5) el5.innerText = mvrvData.recomendacao;
-            const percentTotal = Math.min(100, (mvrvData.total / 4) * 100);
-            const percentSth = Math.min(100, (mvrvData.sth / 2) * 100);
-            const el6 = document.getElementById('mvrvFill'); if(el6) el6.style.width = percentTotal + '%';
-            const el7 = document.getElementById('sthFill'); if(el7) el7.style.width = percentSth + '%';
-            const el8 = document.getElementById('mvrvRegimeAtualRobot'); if(el8) el8.innerText = mvrvData.regime;
-            const el9 = document.getElementById('mvrvRecomendacaoRobot'); if(el9) el9.innerText = mvrvData.recomendacao;
-            const el10 = document.getElementById('liquidityRegime'); if(el10) el10.innerText = mvrvData.regime;
-            const el11 = document.getElementById('liquidityMvrv'); if(el11) el11.innerText = mvrvData.total;
-            const el12 = document.getElementById('liquidityStrategy'); if(el12) el12.innerText = regimeObj.strategy;
-            atualizarAlocacao();
-        }
-        
-        function calcularScoreCiclo() {
-            const mvrv = parseFloat(document.getElementById('inputMVRV')?.value) || 0;
-            const nupl = parseFloat(document.getElementById('inputNUPL')?.value) || 0;
-            const sopr = parseFloat(document.getElementById('inputSOPR')?.value) || 0;
-            const realizedPrice = parseFloat(document.getElementById('inputRealizedPrice')?.value) || 0;
-            const rhodl = parseFloat(document.getElementById('inputRHODL')?.value) || 0;
-            const puell = parseFloat(document.getElementById('inputPuell')?.value) || 0;
-            const currentPrice = price;
-            let score = 0;
-            if (mvrv < 1) score += 2; else if (mvrv > 3.5) score -= 2;
-            if (nupl < 0.25) score += 2; else if (nupl > 0.6) score -= 2;
-            if (sopr < 1) score += 1; else if (sopr > 1.1) score -= 1;
-            if (currentPrice < realizedPrice) score += 2; else score -= 1;
-            if (rhodl < 1000) score += 2; else if (rhodl > 5000) score -= 2;
-            if (puell < 0.5) score += 2; else if (puell > 3) score -= 2;
-            const elScore = document.getElementById('scoreCiclo'); if(elScore) elScore.innerText = score;
-            let sinal = '', corClass = '', recomendacao = '';
-            if (score >= 5) { sinal = 'COMPRA FORTE'; corClass = 'semaforo-verde'; recomendacao = '🟢 COMPRA FORTE! Cenário de fundo provável. Aumente exposição.'; }
-            else if (score <= -5) { sinal = 'TOPO / RISCO ALTO'; corClass = 'semaforo-vermelho'; recomendacao = '🔴 TOPO DETECTADO! Realize lucros, reduza exposição.'; }
-            else { sinal = 'NEUTRO'; corClass = 'semaforo-amarelo'; recomendacao = '🟡 Mercado neutro. Opere com cautela, evite grandes alocações.'; }
-            const elSinal = document.getElementById('sinalTexto'); if(elSinal) elSinal.innerText = sinal;
-            const elSemaforo = document.getElementById('semaforoIcon'); if(elSemaforo) elSemaforo.className = 'semaforo ' + corClass;
-            const elRec = document.getElementById('recomendacaoCiclo'); if(elRec) elRec.innerHTML = recomendacao;
-        }
-        
-        function setModoLiquidity(modo) {
-            modoLiquidity = modo;
-            const btn1 = document.getElementById('modoAutoLiquidityBtn'); if(btn1) btn1.classList.toggle('active', modo === 'auto');
-            const btn2 = document.getElementById('modoManualLiquidityBtn'); if(btn2) btn2.classList.toggle('active', modo === 'manual');
-            const content1 = document.getElementById('liquidityAutoContent'); if(content1) content1.style.display = modo === 'auto' ? 'block' : 'none';
-            const content2 = document.getElementById('liquidityManualContent'); if(content2) content2.style.display = modo === 'manual' ? 'block' : 'none';
-            if (modo === 'manual') carregarPoolsManual();
-            else atualizarAlocacao();
-        }
-        
-        function atualizarAlocacao() {
-            const alocacoes = {
-                'COMPRA_FORTE': [{ pool: 'BTC/USDC', percent: 30, apr: '45.3%' }, { pool: 'ETH/USDC', percent: 25, apr: '38.7%' }, { pool: 'SOL/USDC', percent: 25, apr: '274.1%' }, { pool: 'USDC/USDT', percent: 20, apr: '21.1%' }],
-                'ACUMULAÇÃO': [{ pool: 'SOL/USDC', percent: 25, apr: '274.1%' }, { pool: 'HYPE/USDC', percent: 20, apr: '224.7%' }, { pool: 'NVDAX/USDC', percent: 15, apr: '146.9%' }, { pool: 'BTC/USDC', percent: 15, apr: '45.3%' }, { pool: 'USDC/USDT', percent: 15, apr: '21.1%' }, { pool: 'ETH/USDC', percent: 10, apr: '38.7%' }],
-                'NEUTRO': [{ pool: 'USDC/USDT', percent: 30, apr: '21.1%' }, { pool: 'BTC/USDC', percent: 25, apr: '45.3%' }, { pool: 'ETH/USDC', percent: 20, apr: '38.7%' }, { pool: 'SOL/USDC', percent: 15, apr: '274.1%' }, { pool: 'WBTC/WETH', percent: 10, apr: '18.5%' }],
-                'REALIZAÇÃO': [{ pool: 'USDC/USDT', percent: 50, apr: '21.1%' }, { pool: 'BTC/USDC', percent: 30, apr: '45.3%' }, { pool: 'COINX/USDC', percent: 20, apr: '344.5%' }],
-                'TOPO': [{ pool: 'USDC/USDT', percent: 100, apr: '21.1%' }]
-            };
-            const alocacaoAtual = alocacoes[mvrvData.regime] || alocacoes['NEUTRO'];
-            const container = document.getElementById('alocacaoLista');
-            if (container) container.innerHTML = alocacaoAtual.map(item => `<div class="alocacao-item"><span>▪ ${item.pool} (${item.apr} APR)</span><span class="alocacao-percent">${item.percent}%</span></div>`).join('');
-        }
-        
-        function carregarPoolsManual() {
-            const container = document.getElementById('poolsManualLista');
-            if (!container) return;
-            let html = '';
-            poolsEstrategicas.forEach((pool, idx) => {
-                const percent = carteiraManual[pool.pool] || 0;
-                html += `<div class="alocacao-item"><span>▪ ${pool.pool} (${pool.apr} APR)</span><input type="number" id="percent_${idx}" value="${percent}" min="0" max="100" step="5" style="width:70px; background:#0d151f; border:1px solid #3d4d62; color:white; padding:5px; border-radius:12px; text-align:center;" onchange="atualizarResumoManual()"><span>%</span></div>`;
-            });
-            container.innerHTML = html;
-            atualizarResumoManual();
-        }
-        
-        function atualizarResumoManual() {
-            let total = 0;
-            poolsEstrategicas.forEach((_, idx) => { const inp = document.getElementById(`percent_${idx}`); if(inp) total += parseFloat(inp.value) || 0; });
-            const div = document.getElementById('resumoManual');
-            if(div) div.innerHTML = `Total: ${total}% ${total === 100 ? '✅' : '⚠️ (deve ser 100%)'}`;
-        }
-        
-        function salvarCarteiraManual() {
-            let total = 0;
-            poolsEstrategicas.forEach((pool, idx) => { 
-                const el = document.getElementById(`percent_${idx}`);
-                const val = el ? (parseFloat(el.value) || 0) : 0;
-                carteiraManual[pool.pool] = val; 
-                total += val; 
-            });
-            if (Math.abs(total - 100) > 1) { alert(`Total: ${total}%. A soma deve ser 100%.`); return; }
-            alert('✅ Configuração salva!');
-        }
-        
-        function simularRetorno() {
-            const valor = parseFloat(document.getElementById('simularValor')?.value) || 10000;
-            const dias = parseFloat(document.getElementById('simularDias')?.value) || 30;
-            const aprs = { 'COMPRA_FORTE': 32.5, 'ACUMULAÇÃO': 85.2, 'NEUTRO': 28.5, 'REALIZAÇÃO': 45.2, 'TOPO': 21.1 };
-            const aprMedio = aprs[mvrvData.regime] || 28.5;
-            const retornoPeriodo = valor * (aprMedio / 100) * (dias / 365);
-            const el = document.getElementById('simulacaoResultado');
-            if(el) el.innerHTML = `<div style="color:var(--green); font-size:24px; font-weight:bold;">+$${retornoPeriodo.toFixed(2)}</div><div>Retorno estimado em ${dias} dias</div><div style="font-size:12px;">APR médio: ${aprMedio.toFixed(1)}% | Valor final: $${(valor + retornoPeriodo).toFixed(2)}</div>`;
-        }
-        
-        function copiarEstrategia() {
-            let texto = '';
-            if (modoLiquidity === 'auto') {
-                const alocacoes = { 'COMPRA_FORTE': 'BTC/USDC (30%), ETH/USDC (25%), SOL/USDC (25%), USDC/USDT (20%)', 'ACUMULAÇÃO': 'SOL/USDC (25%), HYPE/USDC (20%), NVDAX/USDC (15%), BTC/USDC (15%), USDC/USDT (15%), ETH/USDC (10%)', 'NEUTRO': 'USDC/USDT (30%), BTC/USDC (25%), ETH/USDC (20%), SOL/USDC (15%), WBTC/WETH (10%)', 'REALIZAÇÃO': 'USDC/USDT (50%), BTC/USDC (30%), COINX/USDC (20%)', 'TOPO': 'USDC/USDT (100%)' };
-                texto = `📊 ESTRATÉGIA AUTO LIQUIDITY (AUTOMÁTICA)\n\nRegime MVRV: ${mvrvData.regime}\nMVRV: ${mvrvData.total} | STH: ${mvrvData.sth}\n\nAlocação:\n${alocacoes[mvrvData.regime]}\n\n${mvrvData.recomendacao}`;
-            } else {
-                let aloc = '';
-                poolsEstrategicas.forEach(p => { const per = carteiraManual[p.pool] || 0; if(per>0) aloc += `${p.pool} (${p.apr}): ${per}%\n`; });
-                texto = `📊 ESTRATÉGIA AUTO LIQUIDITY (MANUAL)\n\nCarteira Personalizada:\n${aloc}`;
-            }
-            navigator.clipboard.writeText(texto).then(() => alert('✅ Estratégia copiada!')).catch(() => alert('❌ Erro ao copiar.'));
-        }
-        
-        function atualizarAPRsAutoLiquidity() {
-            poolsEstrategicas.forEach(p => { let novoApr = parseFloat(p.apr) + (Math.random() * 30 - 15); novoApr = Math.max(5, Math.min(500, novoApr)); p.apr = novoApr.toFixed(1) + '%'; });
-            renderPoolsEstrategicas();
-            atualizarAlocacao();
-            if (modoLiquidity === 'manual') carregarPoolsManual();
-            alert('✅ APRs atualizados com simulação!');
-        }
-        
-        // ========== FUNÇÕES DA ABA TOP POOLS (CORRIGIDAS - SEM REPETIÇÃO) ==========
-        function extrairNumeros(pool) {
-            const parseNum = (str) => { 
-                if(!str) return 0; 
-                let n = parseFloat(str.replace(/[KMB%$]/g,'')); 
-                if(str.includes('K')) n*=1e3; 
-                if(str.includes('M')) n*=1e6; 
-                return n; 
-            };
-            return { tvlNum: parseNum(pool.tvl), volNum: parseNum(pool.volume), aprNum: parseNum(pool.apr) };
-        }
+        function cryptoNews() {
+            return {
+                view: 'feed', // 'feed' ou 'headlines'
+                isDark: true,
+                loading: false,
+                error: null,
+                news: [],
+                filterCategory: 'all',
+                toast: { visible: false, message: '' },
+                
+                // Configuração das Categorias
+                categories: [
+                    { id: 'all', label: 'Todas', icon: '', activeClass: 'bg-gray-100 text-gray-900 border-gray-100' },
+                    { id: 'crypto', label: 'Cripto', icon: '🟡', activeClass: 'bg-yellow-500 text-black border-yellow-500' },
+                    { id: 'macro', label: 'Macro', icon: '🔵', activeClass: 'bg-blue-500 text-white border-blue-500' },
+                    { id: 'politics', label: 'Política', icon: '', activeClass: 'bg-red-500 text-white border-red-500' }
+                ],
 
-        function calcularScore(pool, tvls, vols, aprs) {
-            const {tvlNum,volNum,aprNum} = extrairNumeros(pool);
-            const tvlPerc = tvls.length ? tvls.filter(v=>v<tvlNum).length/tvls.length : 0;
-            const volPerc = vols.length ? vols.filter(v=>v<volNum).length/vols.length : 0;
-            const aprPerc = aprs.length ? aprs.filter(v=>v<aprNum).length/aprs.length : 0;
-            return (aprPerc*0.4)+(volPerc*0.3)+(tvlPerc*0.2);
-        }
+                // Inicialização
+                initApp() {
+                    // Carregar tema salvo
+                    if (localStorage.getItem('theme') === 'light') {
+                        this.isDark = false;
+                        document.documentElement.classList.remove('dark');
+                    }
+                    
+                    // Carregar notícias (Cache ou Fetch)
+                    this.loadNews();
+                    
+                    // Auto-refresh a cada 15 min
+                    setInterval(() => this.loadNews(), 15 * 60 * 1000);
+                },
 
-        function getTopAPRs(pools, n) {
-            // Ordena por APR e retorna os top N
-            const sorted = [...pools].sort((a,b) => parseFloat(b.apr) - parseFloat(a.apr));
-            return sorted.slice(0,n).map(p => ({ pair: p.pool, apr: p.apr, risk: getRiskLevel(p) }));
-        }
+                // Alternar Tema
+                toggleTheme() {
+                    this.isDark = !this.isDark;
+                    if (this.isDark) {
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('theme', 'dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('theme', 'light');
+                    }
+                },
 
-        function refreshCategories() {
-            const container = document.getElementById('categoriesContainer');
-            if(!container) return;
-            
-            // Pega os top 5 de cada categoria (já estão separadas, sem repetição)
-            const bluechip = getTopAPRs(poolsBlueChip, 5);
-            const stable = getTopAPRs(poolsStableCoin, 5);
-            const rwa = getTopAPRs(poolsRWA, 5);
-            const real = getTopAPRs(poolsReal, 5);
-            
-            const categories = [
-                { title: "BEST BLUE-CHIP", items: bluechip },
-                { title: "BEST STABLE COIN", items: stable },
-                { title: "BEST RWA", items: rwa },
-                { title: "BEST REAL", items: real }
-            ];
-            
-            let html = '';
-            for (let cat of categories) {
-                html += `<div class="category-card"><div class="category-title">${cat.title}<span class="risk-dot ${cat.items[0]?.risk.class || 'risk-amarelo'}"></span></div>`;
-                for (let item of cat.items) {
-                    html += `<div class="category-item"><span class="pair"><span class="risk-dot ${item.risk.class}"></span>${item.pair}</span><span class="apr">${item.apr}</span></div>`;
-                }
-                html += `</div>`;
-            }
-            container.innerHTML = html;
-        }
+                // Lógica de Carregamento de Notícias
+                async loadNews() {
+                    this.loading = true;
+                    this.error = null;
+                    
+                    try {
+                        // SIMULAÇÃO DE DADOS (Para funcionar sem API Key imediatamente)
+                        // Para produção, substitua por fetch real às APIs
+                        const simulatedData = await this.fetchSimulatedData();
+                        
+                        // Processamento e Scoring
+                        this.news = this.processNews(simulatedData);
+                        
+                    } catch (e) {
+                        this.error = "Falha ao buscar notícias. Verifique sua conexão.";
+                    } finally {
+                        this.loading = false;
+                    }
+                },
 
-        function gerarVariacao() { return [(Math.random()*4-2).toFixed(2), (Math.random()*4-2).toFixed(2), (Math.random()*4-2).toFixed(2), (Math.random()*4-2).toFixed(2), (Math.random()*4-2).toFixed(2)]; }
+                refreshNews() {
+                    this.loadNews();
+                },
 
-        function renderPoolsTable(pools) {
-            const tbody = document.getElementById('poolsTableBody');
-            if(!tbody) return;
-            tbody.innerHTML = '<tr><td colspan="15" class="table-loading"><span class="spinner"></span>Carregando pools<span class="dots"></span></td></tr>';
-            setTimeout(() => {
-                if(!pools || pools.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="15" class="table-loading">⚠️ Nenhuma pool encontrada com os filtros atuais</td></tr>';
-                    return;
-                }
-                tbody.innerHTML = '';
-                pools.forEach(p => {
-                    const {aprNum} = extrairNumeros(p);
-                    const scorePercent = Math.min(100, (aprNum / 500) * 100);
-                    const variacoes = gerarVariacao();
-                    const formatVar = (v) => `<span class="${parseFloat(v)>=0?'positive':'negative'}">${parseFloat(v)>=0?'▲':'▼'} ${Math.abs(v)}%</span>`;
-                    const risk = getRiskLevel(p);
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td><span class="risk-dot ${risk.class}"></span><strong>${p.pool}</strong></td>
-                        <td>${p.network}</td>
-                        <td>${p.dex}</td>
-                        <td>$${p.tvl}</td>
-                        <td><div class="ratio-bar" title="Proporção dos tokens na pool"><span style="width:${p.ratio.split('/')[0]}%;"></span></div>${p.ratio}</td>
-                        <td>$${p.volume}</td>
-                        <td class="apr-high">${p.apr}</td>
-                        <td>${formatVar(variacoes[0])}</td>
-                        <td>${formatVar(variacoes[1])}</td>
-                        <td>${formatVar(variacoes[2])}</td>
-                        <td>${formatVar(variacoes[3])}</td>
-                        <td>${formatVar(variacoes[4])}</td>
-                        <td>${p.fee}</td>
-                        <td>${p.age}</td>
-                        <td><div class="score-bar-small" title="Score = 40% APR + 30% Volume + 20% TVL + 10% Antiguidade"><div class="score-fill-small" style="width:${scorePercent}%;"></div></div>${Math.round(scorePercent)}%</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            }, 150);
-        }
+                // Gera dados fictícios realistas para demonstração
+                async fetchSimulatedData() {
+                    return new Promise(resolve => {
+                        setTimeout(() => {
+                            const now = new Date();
+                            const data = [
+                                {
+                                    id: 1,
+                                    title: "Bitcoin supera US$ 72.000 com entrada massiva de ETFs spot",
+                                    desc: "Institucionais compram aggressively enquanto o Fed sinaliza corte de juros.",
+                                    source: "CoinDesk",
+                                    image: "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?auto=format&fit=crop&w=500&q=80",
+                                    category: "crypto",
+                                    date: new Date(now - 1000 * 60 * 30).toISOString(), // 30 min atrás
+                                    url: "#"
+                                },
+                                {
+                                    id: 2,
+                                    title: "Fed surpreende mercados e mantém taxas inalteradas por mais um trimestre",
+                                    desc: "Jerome Powell cita inflação persistente como motivo para cautela.",
+                                    source: "Bloomberg",
+                                    image: "https://images.unsplash.com/photo-1611974765270-ca1258634369?auto=format&fit=crop&w=500&q=80",
+                                    category: "macro",
+                                    date: new Date(now - 1000 * 60 * 60 * 2).toISOString(), // 2h atrás
+                                    url: "#"
+                                },
+                                {
+                                    id: 3,
+                                    title: "Ethereum atinge novo recorde de transações diárias na camada 2",
+                                    desc: "Solana e Layer 2s competem ferozmente por taxas mais baixas.",
+                                    source: "Decrypt",
+                                    image: "https://images.unsplash.com/photo-1622630998477-20aa696ecb05?auto=format&fit=crop&w=500&q=80",
+                                    category: "crypto",
+                                    date: new Date(now - 1000 * 60 * 60 * 5).toISOString(),
+                                    url: "#"
+                                },
+                                {
+                                    id: 4,
+                                    title: "Presidente dos EUA anuncia nova regulação severa para stablecoins",
+                                    desc: "Mercado reage com volatilidade às novas propostas legislativas.",
+                                    source: "Reuters",
+                                    image: "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&w=500&q=80",
+                                    category: "politics",
+                                    date: new Date(now - 1000 * 60 * 60 * 1).toISOString(),
+                                    url: "#"
+                                },
+                                {
+                                    id: 5,
+                                    title: "NFTs de arte digital batem recorde de vendas em leilão histórico",
+                                    desc: "Colecionadores tradicionais entram no mercado de tokens não fungíveis.",
+                                    source: "ArtNews",
+                                    image: "https://images.unsplash.com/photo-1634973357973-f5ed193573f0?auto=format&fit=crop&w=500&q=80",
+                                    category: "crypto",
+                                    date: new Date(now - 1000 * 60 * 60 * 8).toISOString(),
+                                    url: "#"
+                                }
+                            ];
+                            resolve(data);
+                        }, 800); // Delay artificial de 800ms
+                    });
+                },
 
-        function ordenarLista(lista, coluna, direcao) {
-            lista.sort((a,b) => {
-                let valA, valB;
-                if(coluna==='tvl' || coluna==='volume' || coluna==='apr') { valA=extrairNumeros(a)[coluna+'Num']; valB=extrairNumeros(b)[coluna+'Num']; }
-                else { valA=a[coluna]; valB=b[coluna]; }
-                return direcao==='asc'?(valA>valB?1:-1):(valA<valB?1:-1);
-            });
-        }
+                // Calcula Score e Formata Dados
+                processNews(rawNews) {
+                    return rawNews.map(item => {
+                        let score = 0;
+                        const titleLower = item.title.toLowerCase();
+                        
+                        // Lógica de Score
+                        if (titleLower.includes('bitcoin') || titleLower.includes('btc')) score += 3;
+                        if (titleLower.includes('fed') || titleLower.includes('juros')) score += 5;
+                        if (titleLower.includes('crash') || titleLower.includes('recorde')) score += 4;
+                        if (titleLower.includes('etf')) score += 3;
+                        
+                        // Recência
+                        const hours = (new Date() - new Date(item.date)) / 36e5;
+                        if (hours < 2) score += 5;
+                        else if (hours < 6) score += 2;
 
-        function aplicarFiltrosEOrdenar() {
-            let poolsFiltradas = poolsData.filter(p => {
-                const {tvlNum,volNum,aprNum}=extrairNumeros(p);
-                if(tvlNum<filtros.tvlMin) return false;
-                if(volNum<filtros.volMin) return false;
-                if(aprNum<filtros.aprMin) return false;
-                if(searchTerm && !p.pool.toUpperCase().includes(searchTerm.toUpperCase())) return false;
-                return true;
-            });
-            if(modoAtual==='auto') {
-                const tvls=poolsFiltradas.map(p=>extrairNumeros(p).tvlNum);
-                const vols=poolsFiltradas.map(p=>extrairNumeros(p).volNum);
-                const aprs=poolsFiltradas.map(p=>extrairNumeros(p).aprNum);
-                poolsFiltradas=poolsFiltradas.map(p=>{p.score=calcularScore(p,tvls,vols,aprs); return p;});
-                poolsFiltradas.sort((a,b)=>b.score-a.score);
-            } else if(modoAtual==='apr') {
-                poolsFiltradas.sort((a,b)=>extrairNumeros(b).aprNum-extrairNumeros(a).aprNum);
-            }
-            renderPoolsTable(poolsFiltradas);
-            
-            // Feedback visual dos filtros
-            const count = document.querySelectorAll('#poolsTableBody tr:not(.table-loading)')?.length || 0;
-            const feedback = document.getElementById('filterFeedback');
-            if(feedback) {
-                if(count === 0 && searchTerm) { feedback.innerHTML = `⚠️ Nenhuma pool encontrada para "<strong>${searchTerm}</strong>"`; feedback.style.color = 'var(--orange)'; }
-                else if(count === 0) { feedback.innerHTML = `⚠️ Ajuste os filtros para encontrar pools`; feedback.style.color = 'var(--orange)'; }
-                else { feedback.innerHTML = `✅ <strong>${count}</strong> pool${count>1?'s':''} encontrada${count>1?'s':''}`; feedback.style.color = 'var(--green)'; }
-            }
-        }
+                        // Cores e Labels
+                        const catMap = {
+                            'crypto': { label: 'Cripto', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
+                            'macro': { label: 'Macro', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
+                            'politics': { label: 'Política', color: 'bg-red-500/20 text-red-400 border-red-500/30' }
+                        };
 
-        function setModo(modo) { 
-            modoAtual = modo; 
-            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-            if(modo === 'auto') document.getElementById('modoAutoBtn')?.classList.add('active');
-            else if(modo === 'manual') document.getElementById('modoManualBtn')?.classList.add('active');
-            else if(modo === 'apr') document.getElementById('modoAPRBtn')?.classList.add('active');
-            aplicarFiltrosEOrdenar(); 
-        }
+                        return {
+                            ...item,
+                            score,
+                            categoryLabel: catMap[item.category]?.label || 'Geral',
+                            categoryColors: catMap[item.category]?.color || 'bg-gray-500/20 text-gray-400'
+                        };
+                    }).sort((a, b) => b.score - a.score); // Ordena por score
+                },
 
-        function aplicarFiltros() { 
-            filtros.tvlMin = parseFloat(document.getElementById('filtroTVL')?.value) || 0; 
-            filtros.volMin = parseFloat(document.getElementById('filtroVolume')?.value) || 0; 
-            filtros.aprMin = parseFloat(document.getElementById('filtroAPR')?.value) || 0; 
-            aplicarFiltrosEOrdenar(); 
-        }
+                // Filtragem Computada
+                get filteredNews() {
+                    if (this.filterCategory === 'all') return this.news;
+                    return this.news.filter(n => n.category === this.filterCategory);
+                },
 
-        function ordenarPor(coluna) { 
-            if(modoAtual==='manual') ordenacaoAtual = { coluna, direcao: ordenacaoAtual.coluna===coluna && ordenacaoAtual.direcao==='asc' ? 'desc' : 'asc' }; 
-            aplicarFiltrosEOrdenar(); 
-        }
-
-        function filtrarPorPar() { 
-            searchTerm = document.getElementById('searchPairInput')?.value.trim() || ''; 
-            aplicarFiltrosEOrdenar(); 
-        }
-
-        function atualizarPoolsCompleto() {
-            poolsData.forEach(p => {
-                let novoApr = parseFloat(p.apr) + (Math.random() * 30 - 15);
-                novoApr = Math.max(5, Math.min(500, novoApr));
-                p.apr = novoApr.toFixed(1) + '%';
-                let novoTvl = parseFloat(p.tvl) + (Math.random() * 20 - 10);
-                novoTvl = Math.max(1, Math.min(500, novoTvl));
-                p.tvl = novoTvl.toFixed(1) + 'K';
-                let novoVol = parseFloat(p.volume) + (Math.random() * 30 - 15);
-                novoVol = Math.max(0.1, Math.min(10, novoVol));
-                p.volume = novoVol.toFixed(2) + 'M';
-            });
-            refreshCategories();
-            aplicarFiltrosEOrdenar();
-            const btn = document.querySelector('.btn-atualizar');
-            if(btn) { const original = btn.innerHTML; btn.innerHTML = '✅ Atualizado!'; setTimeout(() => btn.innerHTML = original, 1500); }
-        }
-        
-        function renderPoolsEstrategicas() {
-            const tbody = document.getElementById('poolsEstrategicasBody');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-            poolsEstrategicas.forEach(p => {
-                const risk = getRiskLevel(p);
-                const badgeClass = risk.class === 'risk-verde' ? 'baixo' : risk.class === 'risk-amarelo' ? 'medio' : 'alto';
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td><span class="risk-dot ${risk.class}"></span><strong>${p.pool}</strong></td><td>${p.network}</td><td>${p.dex}</td><td>$${p.tvl}</td><td><div class="ratio-bar" title="Proporção dos tokens"><span style="width:${p.ratio.split('/')[0]}%;"></span></div>${p.ratio}</td><td>$${p.volume}</td><td class="apr-high">${p.apr}</td><td>${p.fee}</td><td>${p.age}</td><td><span class="regime-badge ${badgeClass}">${risk.emoji} ${risk.text}</span></td><td><a href="${p.link}" target="_blank" class="link-pool">🔗 Acessar</a></td>`;
-                tbody.appendChild(tr);
-            });
-        }
-        
-        function atualizarPoolsEstrategicas() {
-            poolsEstrategicas.forEach(p => {
-                let novoApr = parseFloat(p.apr) + (Math.random() * 30 - 15);
-                novoApr = Math.max(5, Math.min(500, novoApr));
-                p.apr = novoApr.toFixed(1) + '%';
-                let novoTvl = parseFloat(p.tvl) + (Math.random() * 20 - 10);
-                novoTvl = Math.max(1, Math.min(500, novoTvl));
-                p.tvl = novoTvl.toFixed(1) + 'K';
-                let novoVol = parseFloat(p.volume) + (Math.random() * 30 - 15);
-                novoVol = Math.max(0.1, Math.min(10, novoVol));
-                p.volume = novoVol.toFixed(2) + 'M';
-            });
-            renderPoolsEstrategicas();
-            alert('✅ Dados das pools estratégicas atualizados!');
-        }
-        
-        function atualizarCalendario() {
-            const container = document.getElementById('calendarioContainer');
-            if (container) {
-                container.innerHTML = '<div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div></div>';
-                const script = document.createElement('script');
-                script.type = 'text/javascript';
-                script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-events.js';
-                script.async = true;
-                script.innerHTML = JSON.stringify({"width":"100%","height":"600","colorTheme":"dark","locale":"br"});
-                container.querySelector('.tradingview-widget-container')?.appendChild(script);
-            }
-            alert('✅ Calendário recarregado!');
-        }
-        
-        function simularBotLiquidez() {
-            const poolSelect = document.getElementById('demoPoolSelect');
-            const selectedPool = poolSelect?.options[poolSelect.selectedIndex]?.text || 'SOL/USDC';
-            const amount = parseFloat(document.getElementById('demoAmount')?.value) || 1000;
-            const range = document.getElementById('demoRangeSelect')?.value || '±10%';
-            const autoAdjust = document.getElementById('demoAutoAdjust')?.value || 'ON';
-            const logDiv = document.getElementById('demoLog');
-            if(!logDiv) return;
-            logDiv.innerHTML = `[${new Date().toLocaleTimeString()}] 🚀 Iniciando simulação...\n`;
-            logDiv.innerHTML += `[Bot] Pool: ${selectedPool}\n`;
-            logDiv.innerHTML += `[Bot] Valor: ${amount} USDC\n`;
-            logDiv.innerHTML += `[Bot] Range: ${range}\n`;
-            logDiv.innerHTML += `[Bot] Auto-ajuste: ${autoAdjust}\n`;
-            logDiv.innerHTML += `[Bot] Adicionando liquidez...\n`;
-            setTimeout(() => {
-                logDiv.innerHTML += `[Bot] ✅ Liquidez adicionada com sucesso!\n`;
-                if (autoAdjust === 'ON') {
-                    logDiv.innerHTML += `[Bot] Monitorando preço...\n`;
-                    setTimeout(() => {
-                        logDiv.innerHTML += `[Bot] ⚡ Preço variou mais de 5%! Ajustando range...\n`;
-                        logDiv.innerHTML += `[Bot] Novo range: ${range} deslocado para o novo preço.\n`;
-                    }, 2000);
-                }
-                setTimeout(() => {
-                    logDiv.innerHTML += `[Bot] 📈 Taxas acumuladas: ${(amount * 0.002).toFixed(2)} USDC\n`;
-                    logDiv.innerHTML += `[Bot] 🔄 Reinvestindo taxas...\n`;
-                    logDiv.innerHTML += `[Bot] ✅ Simulação concluída.\n`;
-                }, 4000);
-            }, 1500);
-        }
-        
-        function setTF(tf, btn) { 
-            currentTF = tf; 
-            document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active')); 
-            if(btn) btn.classList.add('active'); 
-            initChart(); 
-        }
-        
-        function toggleMode() { 
-            isDesktop = !isDesktop; 
-            document.getElementById('mainCard')?.classList.toggle('desktop-mode', isDesktop); 
-            initChart(); 
-        }
-        
-        function initChart() {
-            const symbol = document.getElementById('pairSelector')?.value || "BINANCE:BTCUSDT";
-            const container = document.getElementById('chart_container');
-            if(!container) return;
-            container.innerHTML = '<div style="color:#8b949e;text-align:center;padding:40px;">🔄 Carregando gráfico...</div>';
-            if(activeWS) { activeWS.close(); activeWS = null; }
-            if(metalInterval) { clearInterval(metalInterval); metalInterval = null; }
-            setTimeout(() => {
-                try {
-                    new TradingView.widget({ "autosize": true, "symbol": symbol, "interval": currentTF, "timezone": "Etc/UTC", "theme": "dark", "style": "1", "locale": "br", "container_id": "chart_container", "hide_side_toolbar": false, "allow_symbol_change": false, "save_image": false, "studies": ["RSI@tv-basicstudies"], "overrides": { "paneProperties.background": "#0d1117", "paneProperties.vertGridProperties.color": "#161b22", "paneProperties.horzGridProperties.color": "#161b22" } });
-                } catch(e) { console.error('Erro TradingView:', e); container.innerHTML = '<div style="color:#ff3e3e;text-align:center;padding:20px;">⚠️ Gráfico indisponível<br><small>Atualize a página ou verifique sua conexão</small></div>'; }
-            }, 200);
-            if(symbol.startsWith("TVC:")) {
-                const asset = symbol === "TVC:GOLD" ? "GOLD" : symbol === "TVC:SILVER" ? "SILVER" : "WTI";
-                fetchHyperliquidPrice(asset);
-                metalInterval = setInterval(() => fetchHyperliquidPrice(asset), 10000);
-            } else {
-                let pair = symbol.split(':')?.[1]?.toLowerCase() || 'btcusdt';
-                let streamPair = pair.includes('btc') ? 'btcusdt' : pair.includes('eth') ? 'ethusdt' : 'solusdt';
-                try {
-                    activeWS = new WebSocket(`wss://stream.binance.com:443/ws/${streamPair}@ticker`);
-                    activeWS.onopen = () => console.log('[WS] Conectado');
-                    activeWS.onmessage = (e) => {
-                        try {
-                            const data = JSON.parse(e.data);
-                            price = parseFloat(data.c);
-                            if(!isNaN(price)) {
-                                const priceEl = document.getElementById('priceText');
-                                if(priceEl) priceEl.innerText = `$ ${price.toLocaleString('en-US', {minimumFractionDigits:2})}`;
-                                pricesHistory.push(price);
-                                if(pricesHistory.length > 50) pricesHistory.shift();
-                                updateSignals();
-                                verificarAlarmes();
-                            }
-                        } catch(err) { console.error('Erro ao processar WS:', err); }
+                // Agrupamento para Headlines
+                get groupedHeadlines() {
+                    const groups = {
+                        'crypto': { label: ' Cripto', items: [] },
+                        'macro': { label: '🔵 Macro & Economia', items: [] },
+                        'politics': { label: '🔴 Política & Regulação', items: [] }
                     };
-                    activeWS.onerror = (err) => { console.warn('[WS] Erro - usando fallback', err); fetchBinanceFallback(streamPair); };
-                    activeWS.onclose = () => { console.log('[WS] Reconectando em 5s...'); setTimeout(() => { if(document.visibilityState === 'visible') initChart(); }, 5000); };
-                } catch(e) { console.warn('WebSocket não suportado - usando fallback'); fetchBinanceFallback(streamPair); }
-            }
-        }
-        
-        async function fetchBinanceFallback(symbol) {
-            try {
-                const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol.toUpperCase()}`);
-                const data = await res.json();
-                price = parseFloat(data.price);
-                if(!isNaN(price)) {
-                    const priceEl = document.getElementById('priceText');
-                    if(priceEl) priceEl.innerText = `$ ${price.toLocaleString('en-US', {minimumFractionDigits:2})}`;
-                    pricesHistory.push(price);
-                    if(pricesHistory.length > 50) pricesHistory.shift();
-                    updateSignals();
+                    
+                    this.news.forEach(n => {
+                        if (groups[n.category]) groups[n.category].items.push(n);
+                    });
+                    
+                    // Retorna apenas grupos com itens
+                    return Object.entries(groups)
+                        .filter(([_, g]) => g.items.length > 0)
+                        .map(([key, g]) => ({ cat: key, ...g }));
+                },
+
+                // Helpers
+                timeAgo(dateString) {
+                    const date = new Date(dateString);
+                    const now = new Date();
+                    const seconds = Math.floor((now - date) / 1000);
+                    if (seconds < 60) return 'Agora mesmo';
+                    const minutes = Math.floor(seconds / 60);
+                    if (minutes < 60) return `${minutes}min atrás`;
+                    const hours = Math.floor(minutes / 60);
+                    if (hours < 24) return `${hours}h atrás`;
+                    return `${Math.floor(hours/24)}d atrás`;
+                },
+
+                copySingle(text) {
+                    navigator.clipboard.writeText(text);
+                    this.showToast('Manchete copiada!');
+                },
+
+                copyAllTitles() {
+                    const text = this.news.map((n, i) => `${i+1}. ${n.title}`).join('\n');
+                    navigator.clipboard.writeText(text);
+                    this.showToast(`${this.news.length} manchetes copiadas!`);
+                },
+
+                generatePrompt() {
+                    const cryptoTitles = this.news.filter(n => n.category === 'crypto').slice(0, 3).map(n => `• ${n.title}`).join('\n');
+                    const macroTitles = this.news.filter(n => n.category === 'macro').slice(0, 3).map(n => `• ${n.title}`).join('\n');
+                    
+                    const prompt = `🚨 BREAKING NEWS - CRIPTO & MERCADO\n\n🟡 CRIPTO:\n${cryptoTitles || '• Sem notícias'}\n\n🔵 MACROECONOMIA:\n${macroTitles || '• Sem notícias'}\n\n🎨 Estilo: Moderno, financeiro, cores escuras, destaque para Bitcoin e mercado global.`;
+                    
+                    navigator.clipboard.writeText(prompt);
+                    this.showToast('Prompt para IA gerado e copiado!');
+                },
+
+                showToast(msg) {
+                    this.toast.message = msg;
+                    this.toast.visible = true;
+                    setTimeout(() => this.toast.visible = false, 3000);
                 }
-            } catch(e) { console.warn('Fallback também falhou'); if(lastValidPrice) { const priceEl = document.getElementById('priceText'); if(priceEl) priceEl.innerText = `$ ${lastValidPrice.toLocaleString('en-US', {minimumFractionDigits:2})} ⚠️`; } }
-        }
-        
-        async function fetchHyperliquidPrice(asset) {
-            const defaults = { GOLD: 4528.50, SILVER: 32.85, WTI: 78.42 };
-            price = defaults[asset];
-            const priceEl = document.getElementById('priceText');
-            if(priceEl) priceEl.innerHTML = `$ ${price.toLocaleString('en-US', {minimumFractionDigits:2})}`;
-            pricesHistory.push(price);
-            if(pricesHistory.length > 50) pricesHistory.shift();
-            updateSignals();
-            verificarAlarmes();
-        }
-        
-        function onSymbolChange() { initChart(); }
-        
-        function calcularEMA50() {
-            if (pricesHistory.length < 50) return price;
-            let multiplier = 2 / (50 + 1);
-            let ema = pricesHistory[0];
-            for (let i = 1; i < pricesHistory.length; i++) { ema = (pricesHistory[i] - ema) * multiplier + ema; }
-            return ema;
-        }
-        
-        function updateSignals() {
-            ema50 = calcularEMA50();
-            const sinalGeral = price > ema50 ? '🟢 OPORTUNIDADE' : '🔴 AGUARDAR';
-            const statusText = document.getElementById('statusText');
-            const sinalGeralIcon = document.getElementById('sinalGeralIcon');
-            if(statusText) statusText.innerText = sinalGeral;
-            if(sinalGeralIcon) sinalGeralIcon.style.background = price > ema50 ? '#00ff88' : '#ff3e3e';
-            let sinalTecnico = '⚖️ NEUTRO', sinalTecnicoIcon = '🟡', sinalTecnicoValor = 0;
-            if (pricesHistory.length >= 21) {
-                const compra = price > pricesHistory[pricesHistory.length - 21];
-                sinalTecnico = compra ? '🚀 COMPRA' : '📉 VENDA';
-                sinalTecnicoIcon = compra ? '🟢' : '🔴';
-                sinalTecnicoValor = compra ? 40 : 0;
             }
-            const rsiText = document.getElementById('rsiText');
-            const sinalTecnicoIconEl = document.getElementById('sinalTecnicoIcon');
-            if(rsiText) rsiText.innerText = sinalTecnico;
-            if(sinalTecnicoIconEl) sinalTecnicoIconEl.style.background = sinalTecnicoIcon === '🟢' ? '#00ff88' : (sinalTecnicoIcon === '🔴' ? '#ff3e3e' : '#ffcc00');
-            let sinalMomentum = '⚖️ NEUTRO', sinalMomentumIcon = '🟡', sinalMomentumValor = 0;
-            if (pricesHistory.length >= 3) {
-                const avg3 = pricesHistory.slice(-3).reduce((a,b)=>a+b,0)/3;
-                const variacao = (price - avg3) / avg3 * 100;
-                if (variacao > 0.2) { sinalMomentum = '📈 ALTA'; sinalMomentumIcon = '🟢'; sinalMomentumValor = 30; }
-                else if (variacao < -0.2) { sinalMomentum = '📉 BAIXA'; sinalMomentumIcon = '🔴'; sinalMomentumValor = 30; }
-                else { sinalMomentum = '⚖️ NEUTRO'; sinalMomentumIcon = '🟡'; sinalMomentumValor = 0; }
-            }
-            const momText = document.getElementById('momText');
-            const sinalMomentumIconEl = document.getElementById('sinalMomentumIcon');
-            if(momText) momText.innerText = sinalMomentum;
-            if(sinalMomentumIconEl) sinalMomentumIconEl.style.background = sinalMomentumIcon === '🟢' ? '#00ff88' : (sinalMomentumIcon === '🔴' ? '#ff3e3e' : '#ffcc00');
-            let score = (price > ema50 ? 30 : 0) + sinalTecnicoValor + sinalMomentumValor;
-            if ((sinalTecnico.includes('COMPRA') && sinalMomentum.includes('BAIXA')) || (sinalTecnico.includes('VENDA') && sinalMomentum.includes('ALTA'))) score = 0;
-            const scoreFill = document.getElementById('scoreFill');
-            const scoreValue = document.getElementById('scoreValue');
-            if(scoreFill) scoreFill.style.width = score + '%';
-            if(scoreValue) scoreValue.innerText = score + '/100';
-            let scoreLabel = '⚠️ Evitar operação', probabilidade = 'Baixa', classeScore = 'baixa';
-            if (score >= 80) { scoreLabel = '🔥 Confluência forte'; probabilidade = 'Alta'; classeScore = 'alta'; const badge = document.getElementById('alertaBadge'); if(badge) badge.style.display = 'inline-block'; }
-            else if (score >= 60) { scoreLabel = '⚡ Confluência moderada'; probabilidade = 'Média'; classeScore = 'media'; const badge = document.getElementById('alertaBadge'); if(badge) badge.style.display = 'none'; }
-            else { const badge = document.getElementById('alertaBadge'); if(badge) badge.style.display = 'none'; }
-            if(scoreFill) scoreFill.className = 'score-fill ' + classeScore;
-            const scoreLabelEl = document.getElementById('scoreLabel');
-            const probabilidadeEl = document.getElementById('probabilidade');
-            if(scoreLabelEl) scoreLabelEl.innerText = scoreLabel;
-            if(probabilidadeEl) probabilidadeEl.innerText = probabilidade;
-            const hora = new Date().getHours(), minutos = new Date().getMinutes(), horaMin = hora + minutos/60;
-            let sessao = 'Fora do horário';
-            if (horaMin >= 21 || horaMin < 1) sessao = '🌏 Ásia';
-            else if (horaMin >= 4 && horaMin < 9) sessao = '🇪 Londres';
-            else if (horaMin >= 10 && horaMin < 14) sessao = '🇺🇸 NY (Pico)';
-            else if (horaMin >= 9.33 && horaMin < 15.5) sessao = '🥇 Metais NY';
-            else if (horaMin >= 10 && horaMin < 16.5) sessao = '🛢️ Petróleo';
-            const sessaoText = document.getElementById('sessaoText');
-            if(sessaoText) sessaoText.innerText = sessao;
         }
-        
-        function calc() { 
-            const tp = price * (1 + parseFloat(document.getElementById('tpP')?.value || 1)/100); 
-            const sl = price * (1 - parseFloat(document.getElementById('slP')?.value || 1)/100); 
-            const resTP = document.getElementById('resTP');
-            const resSL = document.getElementById('resSL');
-            const results = document.getElementById('results');
-            if(resTP) resTP.innerText = `$${tp.toFixed(2)}`;
-            if(resSL) resSL.innerText = `$${sl.toFixed(2)}`;
-            if(results) results.style.display = 'block'; 
-        }
-        
-        function adicionarAlarme() { const preco = parseFloat(document.getElementById('alarmePreco')?.value); if(isNaN(preco)) return; alarmes.push({ preco, ativo: true, id: Date.now() }); atualizarListaAlarmes(); }
-        function removerAlarme(id) { alarmes = alarmes.filter(a => a.id !== id); atualizarListaAlarmes(); }
-        function atualizarListaAlarmes() {
-            const lista = document.getElementById('alarmeLista');
-            if(!lista) return;
-            if(alarmes.length === 0) { lista.innerHTML = '<div style="color: var(--text); text-align: center; padding: 10px;">Nenhum alarme definido</div>'; return; }
-            lista.innerHTML = alarmes.map(a => `<div class="alarme-item"><span>🔔 $${a.preco.toLocaleString('en-US', {minimumFractionDigits:2})}</span><button class="alarme-remover" onclick="removerAlarme(${a.id})">✕</button></div>`).join('');
-        }
-        function verificarAlarmes() { alarmes.forEach(alarme => { if(alarme.ativo && Math.abs(price - alarme.preco) / alarme.preco < 0.001) { alarme.ativo = false; alert(`🔔 ALARME! Preço atingiu $${alarme.preco.toFixed(2)}`); atualizarListaAlarmes(); } }); }
-        
-        function iniciarTimerDescanso() { clearTimeout(timeoutDescanso); timeoutDescanso = setTimeout(() => { if(!modoOperacaoAtivo) document.body.classList.add("modo-descanso"); }, 90000); }
-        function resetTimer() { if(!modoOperacaoAtivo) { document.body.classList.remove("modo-descanso"); iniciarTimerDescanso(); } }
-        document.onmousemove = resetTimer; document.onkeydown = resetTimer;
-        const toggleLock = document.getElementById("lockScreenToggle");
-        if(toggleLock) toggleLock.addEventListener("change", function() {
-            modoOperacaoAtivo = this.checked;
-            const statusModo = document.getElementById("statusModo");
-            if(modoOperacaoAtivo) { if(statusModo) statusModo.innerText = "Modo Operação: ON"; clearTimeout(timeoutDescanso); document.body.classList.remove("modo-descanso"); document.body.classList.add("modo-ativo"); }
-            else { if(statusModo) statusModo.innerText = "Modo Operação: OFF"; document.body.classList.remove("modo-ativo"); iniciarTimerDescanso(); }
-        });
-        
-        function openPasswordModal() { const el = document.getElementById('passwordModal'); if(el) el.style.display = 'flex'; }
-        function openDonationModal() { const el = document.getElementById('donationModal'); if(el) el.style.display = 'flex'; }
-        function openPoolsModal() { const el = document.getElementById('poolsModal'); if(el) { el.style.display = 'flex'; refreshCategories(); setModo('apr'); renderPoolsEstrategicas(); startAutoUpdate(); } }
-        function closePoolsModal() { const el = document.getElementById('poolsModal'); if(el) el.style.display = 'none'; if(autoUpdateTimer) clearInterval(autoUpdateTimer); if(countdownTimer) clearInterval(countdownTimer); }
-        
-        function switchTab(tab) {
-            document.querySelectorAll('.tab-btn').forEach(btn=>btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content=>content.classList.remove('active'));
-            const tabMap = { pools:0, poolsEstrategicas:1, news:2, strategies:3, robot:4, mvrv:5, ciclo:6, liquidity:7 };
-            const idx = tabMap[tab];
-            if(idx !== undefined) document.querySelectorAll('.tab-btn')[idx]?.classList.add('active');
-            const content = document.getElementById(`${tab}Tab`);
-            if(content) content.classList.add('active');
-            if(tab === 'pools') { refreshCategories(); startAutoUpdate(); }
-            if(tab === 'mvrv') atualizarMVRV();
-            if(tab === 'liquidity') { atualizarMVRV(); atualizarAlocacao(); }
-            if(tab === 'ciclo') calcularScoreCiclo();
-        }
-        
-        function checkPassword() { const input = document.getElementById('passInput'); if(input?.value === 'Maria1301') { fecharModal('passwordModal'); const robotModal = document.getElementById('robotModal'); if(robotModal) robotModal.style.display = 'flex'; } else alert('Senha incorreta'); }
-        function connectHyperliquid() { const consoleEl = document.getElementById('apiConsole'); if(consoleEl) consoleEl.innerHTML = '[API] Conectado com sucesso! (modo simulação)'; }
-        function placeRealOrder() {
-            const mvrvFilterActive = document.getElementById('mvrvFilterToggle')?.checked;
-            if(mvrvFilterActive && (mvrvData.regime === 'TOPO' || mvrvData.regime === 'REALIZAÇÃO')) { alert(`⚠️ Filtro MVRV ativo: Mercado em ${mvrvData.regime}. Operação bloqueada!`); return; }
-            alert('⚠️ Ordem simulada. Conecte-se à Hyperliquid para ordens reais.');
-        }
-        
-        // ========== INICIALIZAÇÃO ==========
-        window.addEventListener('load', () => {
-            refreshCategories();
-            setModo('apr');
-            iniciarTimerDescanso();
-            initChart();
-            atualizarMVRV();
-            renderPoolsEstrategicas();
-            calcularScoreCiclo();
-            const demoSelect = document.getElementById('demoPoolSelect');
-            if (demoSelect) { poolsEstrategicas.forEach(p => { const opt = document.createElement('option'); opt.value = p.pool; opt.text = p.pool; demoSelect.appendChild(opt); }); }
-            const mvrvFilterToggle = document.getElementById('mvrvFilterToggle');
-            const mvrvStatusRobot = document.getElementById('mvrvStatusRobot');
-            if(mvrvFilterToggle) mvrvFilterToggle.addEventListener('change', function() { if(mvrvStatusRobot) mvrvStatusRobot.style.display = this.checked ? 'block' : 'none'; });
-        });
-        
-        setTimeout(() => {
-            const priceEl = document.getElementById('priceText');
-            if(priceEl && priceEl.innerText.includes('--')) {
-                priceEl.innerHTML = `<span style="color:var(--gold)">📴 Offline</span><br><small style="color:var(--text)">Preço manual: $67,728</small>`;
-                const chartEl = document.getElementById('chart_container');
-                if(chartEl) chartEl.innerHTML = '<div style="color:var(--text);text-align:center;padding:30px;">📊 Gráfico indisponível<br><small>Verifique sua conexão</small></div>';
-            }
-        }, 10000);
     </script>
 </body>
 </html>
