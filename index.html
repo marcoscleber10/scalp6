@@ -68,12 +68,6 @@
                  class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                  placeholder="Obtenha em cryptopanic.com/developers">
         </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-300 mb-1">Gemini API Key (tradução - opcional)</label>
-          <input type="password" x-model="apiKeys.gemini" 
-                 class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                 placeholder="Obtenha em makersuite.google.com">
-        </div>
       </div>
       
       <div class="mt-6 flex gap-3">
@@ -84,10 +78,6 @@
           Modo Demo
         </button>
       </div>
-      
-      <p class="mt-4 text-xs text-gray-500 text-center">
-        Suas chaves são salvas apenas no seu navegador (localStorage)
-      </p>
     </div>
   </div>
 
@@ -95,7 +85,6 @@
   <header class="sticky top-0 z-50 bg-gray-900/95 backdrop-blur-md border-b border-gray-800">
     <div class="max-w-7xl mx-auto px-4 py-3">
       <div class="flex items-center justify-between">
-        <!-- Logo + Stats -->
         <div class="flex items-center gap-4">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
@@ -107,23 +96,19 @@
             </div>
           </div>
           
-          <!-- Stats Badge -->
           <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-800 rounded-full border border-gray-700">
             <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
             <span class="text-xs text-gray-300" x-text="`+${stats.total24h} notícias em 24h`"></span>
           </div>
         </div>
 
-        <!-- Actions -->
         <div class="flex items-center gap-2">
-          <!-- Search Trigger -->
           <button @click="showSearch = true" class="hidden sm:flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm text-gray-400 transition-colors">
             <i class="ph-bold ph-magnifying-glass"></i>
             <span>Buscar...</span>
             <span class="ml-2 px-1.5 py-0.5 bg-gray-700 rounded text-[10px]">Ctrl+K</span>
           </button>
           
-          <!-- View Toggle -->
           <button @click="view = view === 'feed' ? 'headlines' : 'feed'"
                   class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all"
                   :class="view === 'headlines' ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/25' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'">
@@ -131,14 +116,12 @@
             <span x-text="view === 'feed' ? 'Painel IA' : 'Feed'"></span>
           </button>
           
-          <!-- Theme Toggle -->
           <button @click="toggleTheme()" class="w-10 h-10 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-colors">
             <i class="ph-fill" :class="isDark ? 'ph-moon-stars text-yellow-400' : 'ph-sun text-gray-300'"></i>
           </button>
         </div>
       </div>
 
-      <!-- Breaking News Banner -->
       <div x-show="breakingNews" x-transition class="breaking-banner mt-3 rounded-lg px-4 py-2 flex items-center gap-3">
         <i class="ph-fill ph-warning-circle text-white text-lg animate-pulse"></i>
         <span class="text-white font-medium text-sm truncate" x-text="breakingNews"></span>
@@ -147,7 +130,6 @@
         </button>
       </div>
 
-      <!-- Filters Bar (Feed View) -->
       <div x-show="view === 'feed'" x-transition class="flex gap-2 mt-4 overflow-x-auto scrollbar-hide pb-1">
         <template x-for="cat in categories" :key="cat.id">
           <button @click="filters.category = cat.id"
@@ -200,12 +182,6 @@
               </template>
             </div>
           </template>
-          <template x-if="searchResults.length === 0 && filters.search.length > 2">
-            <div class="text-center py-8 text-gray-500">
-              <i class="ph-duotone ph-magnifying-glass text-3xl mb-2"></i>
-              <p>Nenhum resultado para "<span x-text="filters.search"></span>"</p>
-            </div>
-          </template>
         </div>
       </div>
     </div>
@@ -214,7 +190,6 @@
   <!-- ================= MAIN CONTENT ================= -->
   <main class="max-w-7xl mx-auto px-4 py-6 min-h-screen">
     
-    <!-- Loading / Error States -->
     <div x-show="loading && news.length === 0" class="flex flex-col items-center justify-center py-20">
       <div class="relative">
         <div class="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
@@ -223,7 +198,6 @@
         </div>
       </div>
       <p class="mt-4 text-gray-400">Sincronizando fontes de notícias...</p>
-      <p class="text-xs text-gray-600 mt-1" x-text="`Fontes: ${activeSources.join(', ')}`"></p>
     </div>
 
     <div x-show="error && !loading" class="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm flex items-start gap-3">
@@ -236,7 +210,7 @@
       </div>
     </div>
 
-    <!-- Trending Section (Top 3) -->
+    <!-- Trending Section -->
     <div x-show="view === 'feed' && trending.length > 0" class="mb-6">
       <div class="flex items-center gap-2 mb-3">
         <i class="ph-fill ph-fire text-orange-500"></i>
@@ -276,7 +250,7 @@
             <span x-text="loading ? 'Atualizando...' : 'Atualizar'"></span>
           </button>
           <span>•</span>
-          <span x-text="`Cache: ${cacheInfo}`"></span>
+          <span>Cache: <span x-text="cacheInfo"></span></span>
         </div>
       </div>
 
@@ -284,53 +258,38 @@
         <template x-for="item in paginatedNews" :key="item.id">
           <article class="group bg-gray-900/40 border border-gray-800 rounded-xl overflow-hidden hover:border-blue-500/50 hover:bg-gray-800/50 transition-all duration-200 fade-in">
             <div class="flex flex-col sm:flex-row">
-              <!-- Image -->
               <div class="w-full sm:w-52 h-48 sm:h-auto relative shrink-0 bg-gray-800">
                 <img :src="item.image || getDefaultImage(item.category)" 
                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                      @error="$el.parentElement.innerHTML = '<div class=\'w-full h-full flex items-center justify-center bg-gray-800 text-gray-600 text-xs\'><i class=\'ph-bold ph-image mr-1\'></i> Sem imagem</div>'">
                 
-                <!-- Score Badge -->
                 <div x-show="item.score >= 12" class="absolute top-3 right-3 bg-orange-500/90 text-white text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1 shadow-lg">
                   <i class="ph-fill ph-fire"></i> HOT
                 </div>
               </div>
               
-              <!-- Content -->
               <div class="p-5 flex flex-col justify-between flex-1">
                 <div>
-                  <!-- Meta -->
                   <div class="flex items-center gap-2 mb-3 flex-wrap">
                     <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider" :class="item.categoryColors" x-text="item.categoryLabel"></span>
                     <span class="text-gray-500 text-xs flex items-center gap-1">
                       <i class="ph ph-clock"></i>
                       <span x-text="timeAgo(item.date)"></span>
                     </span>
-                    <span x-show="item.translated" class="px-1.5 py-0.5 rounded text-[10px] bg-purple-500/20 text-purple-400">PT</span>
                   </div>
 
-                  <!-- Title -->
                   <h3 class="text-lg font-bold text-gray-100 group-hover:text-blue-400 transition-colors mb-2 leading-tight"
                       x-text="item.title"></h3>
                   
-                  <!-- Description -->
                   <p x-show="item.desc" class="text-sm text-gray-400 line-clamp-2 mb-4" x-text="item.desc"></p>
                 </div>
 
-                <!-- Footer -->
                 <div class="flex items-center justify-between pt-3 border-t border-gray-800/50">
                   <div class="flex items-center gap-3">
                     <span class="text-xs font-medium text-gray-300 flex items-center gap-1">
                       <i class="ph-bold ph-broadcast"></i>
                       <span x-text="item.source"></span>
                     </span>
-                    <template x-if="item.keywords?.length">
-                      <div class="flex gap-1">
-                        <template x-for="kw in item.keywords.slice(0, 2)" :key="kw">
-                          <span class="text-[10px] px-1.5 py-0.5 bg-gray-800 rounded text-gray-500" x-text="`#${kw}`"></span>
-                        </template>
-                      </div>
-                    </template>
                   </div>
                   <span class="text-xs text-blue-500 font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     Ler original <i class="ph-bold ph-arrow-right"></i>
@@ -342,7 +301,6 @@
         </template>
       </div>
 
-      <!-- Pagination -->
       <div x-show="totalPages > 1" class="flex items-center justify-center gap-2 mt-6">
         <button @click="currentPage--" :disabled="currentPage === 1" 
                 class="px-4 py-2 rounded-lg bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 transition-colors">
@@ -360,778 +318,367 @@
         </button>
       </div>
 
-      <!-- Empty State -->
       <div x-show="!loading && filteredNews.length === 0" class="text-center py-16 text-gray-500">
         <i class="ph-duotone ph-newspaper-clipping text-5xl mb-4"></i>
         <p class="text-lg mb-2">Nenhuma notícia encontrada</p>
-        <p class="text-sm">Tente ajustar os filtros ou buscar por outros termos</p>
       </div>
     </div>
 
-    <!-- HEADLINES PANEL (IA) -->
+    <!-- HEADLINES PANEL -->
     <div x-show="view === 'headlines'" x-cloak class="max-w-4xl mx-auto">
       <div class="flex items-center justify-between mb-6">
         <div>
           <h2 class="text-2xl font-bold text-white mb-1">🤖 Painel de Manchetes para IA</h2>
-          <p class="text-sm text-gray-400">Copie títulos otimizados para gerar imagens, vídeos ou textos com IA</p>
+          <p class="text-sm text-gray-400">Copie títulos otimizados para gerar insights</p>
         </div>
-        <button @click="refreshNews(true)" class="p-2.5 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors" title="Atualizar">
-          <i class="ph-bold ph-arrows-clockwise" :class="{'animate-spin': loading}"></i>
+        <button @click="copyHeadlines()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors">
+          Copiar Tudo
         </button>
       </div>
-
-      <!-- Quick Actions -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        <button @click="copyAll('titles')" class="bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-colors shadow-lg shadow-green-500/10">
-          <i class="ph-bold ph-copy"></i> Copiar Títulos
-        </button>
-        <button @click="copyAll('prompts')" class="bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-colors shadow-lg shadow-purple-500/10">
-          <i class="ph-bold ph-magic-wand"></i> Prompt IA
-        </button>
-        <button @click="copyAll('json')" class="bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-colors shadow-lg shadow-blue-500/10">
-          <i class="ph-bold ph-code"></i> JSON
-        </button>
-        <button @click="exportCSV()" class="bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-colors">
-          <i class="ph-bold ph-download-simple"></i> CSV
-        </button>
-      </div>
-
-      <!-- Headlines List -->
-      <div class="bg-gray-900/50 border border-gray-800 rounded-2xl p-6">
-        <div class="space-y-6">
-          <template x-for="group in groupedHeadlines" :key="group.cat">
-            <div class="space-y-2">
-              <div class="flex items-center justify-between pb-2 border-b border-gray-800">
-                <h3 class="text-sm font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2">
-                  <span x-text="group.icon"></span>
-                  <span x-text="group.label"></span>
-                  <span class="px-2 py-0.5 rounded-full bg-gray-800 text-xs" x-text="group.items.length"></span>
-                </h3>
-                <button @click="copyGroup(group.items)" class="text-xs text-gray-500 hover:text-white flex items-center gap-1">
-                  <i class="ph-bold ph-copy"></i> Copiar grupo
-                </button>
-              </div>
-              <div class="space-y-1.5">
-                <template x-for="(item, idx) in group.items" :key="item.id">
-                  <div @click="copySingle(item.title)" 
-                       class="group flex items-start gap-3 p-2.5 rounded-lg hover:bg-gray-800/50 cursor-pointer transition-colors"
-                       title="Clique para copiar">
-                    <span class="text-gray-600 font-mono text-xs mt-0.5 w-5" x-text="idx + 1 + '.'"></span>
-                    <div class="flex-1 min-w-0">
-                      <span class="text-sm text-gray-200 group-hover:text-white transition-colors line-clamp-2" x-text="item.title"></span>
-                      <div class="flex items-center gap-2 mt-1 text-[10px] text-gray-500">
-                        <span x-text="item.source"></span>
-                        <span>•</span>
-                        <span x-text="timeAgo(item.date)"></span>
-                        <span x-show="item.score >= 10" class="text-orange-400 flex items-center gap-0.5">
-                          <i class="ph-fill ph-fire text-[10px]"></i>
-                          <span x-text="item.score"></span>
-                        </span>
-                      </div>
-                    </div>
-                    <i class="ph ph-copy text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity mt-1"></i>
-                  </div>
-                </template>
-              </div>
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-2">
+        <template x-for="item in news.slice(0, 20)" :key="item.id">
+          <div class="flex items-start gap-3 p-3 rounded-lg bg-gray-800/50 hover:bg-gray-800 transition-colors">
+            <input type="checkbox" class="mt-1 rounded border-gray-700 bg-gray-800 text-blue-600">
+            <div class="flex-1">
+              <p class="text-sm text-gray-300" x-text="item.title"></p>
+              <p class="text-xs text-gray-500 mt-1" x-text="`${item.source} • ${timeAgo(item.date)}`"></p>
             </div>
-          </template>
-        </div>
+          </div>
+        </template>
       </div>
     </div>
   </main>
 
-  <!-- ================= FOOTER ================= -->
-  <footer class="border-t border-gray-800 py-6 mt-auto">
-    <div class="max-w-7xl mx-auto px-4 text-center">
-      <p class="text-xs text-gray-600">
-        CryptoNews Pro • Atualização automática a cada 15min • Fontes: NewsAPI, CryptoPanic
-      </p>
-      <div class="mt-2 flex items-center justify-center gap-4 text-[10px] text-gray-700">
-        <span x-text="`Cache válido até: ${cacheExpiry}`"></span>
-        <span>•</span>
-        <span x-text="`Última sync: ${lastSync}`"></span>
-      </div>
-    </div>
-  </footer>
-
-  <!-- ================= TOAST NOTIFICATIONS ================= -->
-  <div x-show="toast.visible" x-transition:enter="transition ease-out duration-300"
-       x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
-       x-transition:leave="transition ease-in duration-200"
-       x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-4"
-       class="fixed bottom-6 right-6 z-[70] bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 shadow-2xl flex items-center gap-3 max-w-sm">
-    <div class="w-8 h-8 rounded-lg flex items-center justify-center" 
-         :class="toast.type === 'success' ? 'bg-green-500/20 text-green-400' : toast.type === 'error' ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400'">
-      <i class="ph-bold" :class="toast.type === 'success' ? 'ph-check' : toast.type === 'error' ? 'ph-x' : 'ph-info'"></i>
-    </div>
-    <div class="flex-1">
-      <p class="text-sm font-medium text-white" x-text="toast.title"></p>
-      <p class="text-xs text-gray-400" x-text="toast.message"></p>
-    </div>
-    <button @click="toast.visible = false" class="text-gray-500 hover:text-white">
-      <i class="ph-bold ph-x"></i>
-    </button>
-  </div>
-
-  <!-- ================= JAVASCRIPT LOGIC ================= -->
   <script>
     function cryptoNewsApp() {
       return {
-        // State
-        view: 'feed',
-        isDark: true,
+        view: 'feed', // ABRE NO FEED POR PADRÃO
         loading: false,
         error: null,
+        showSearch: false,
+        isDark: true,
+        breakingNews: null,
+        hasValidKeys: false,
+        currentPage: 1,
+        itemsPerPage: 10,
+        
+        apiKeys: {
+          newsapi: '',
+          cryptopanic: '',
+          gemini: ''
+        },
+        
+        stats: {
+          total24h: 236
+        },
+        
+        categories: [
+          { id: 'all', label: 'Todas', icon: '☰', count: 0, activeClass: 'bg-blue-600 text-white border-blue-500' },
+          { id: 'crypto', label: 'Cripto', icon: '₿', count: 0, activeClass: 'bg-yellow-600 text-white border-yellow-500' },
+          { id: 'macro', label: 'Macro', icon: '📊', count: 0, activeClass: 'bg-blue-600 text-white border-blue-500' },
+          { id: 'politics', label: 'Política', icon: '🏛', count: 0, activeClass: 'bg-red-600 text-white border-red-500' }
+        ],
+        
+        filters: {
+          category: 'all',
+          search: ''
+        },
+        
         news: [],
         searchResults: [],
-        showSearch: false,
-        breakingNews: null,
-        
-        // API Keys
-        hasValidKeys: false,
-        apiKeys: { newsapi: '', cryptopanic: '', gemini: '' },
-        
-        // Filters & Pagination
-        filters: { category: 'all', search: '' },
-        currentPage: 1,
-        itemsPerPage: 20,
-        
-        // Cache Info
-        cacheInfo: '---',
-        cacheExpiry: '---',
-        lastSync: '---',
-        stats: { total24h: 0 },
-        
-        // UI
-        toast: { visible: false, title: '', message: '', type: 'info' },
+        cacheInfo: '--',
         activeSources: [],
         
-        // Categories Config
-        categories: [
-          { id: 'all', label: 'Todas', icon: '', activeClass: 'bg-gray-100 text-gray-900 border-gray-100', count: 0 },
-          { id: 'crypto', label: 'Cripto', icon: '🟡', activeClass: 'bg-yellow-500 text-black border-yellow-500', count: 0 },
-          { id: 'macro', label: 'Macro', icon: '🔵', activeClass: 'bg-blue-500 text-white border-blue-500', count: 0 },
-          { id: 'politics', label: 'Política', icon: '🔴', activeClass: 'bg-red-500 text-white border-red-500', count: 0 }
-        ],
-
-        // ================= INIT =================
-        async init() {
-          // Load theme
-          const savedTheme = localStorage.getItem('theme');
-          if (savedTheme === 'light') {
-            this.isDark = false;
-            document.documentElement.classList.remove('dark');
-          }
-          
-          // Load API keys
-          const savedKeys = localStorage.getItem('cn_api_keys');
-          if (savedKeys) {
-            this.apiKeys = JSON.parse(savedKeys);
-            this.hasValidKeys = !!this.apiKeys.newsapi;
-          }
-          
-          // Load cached news if available
-          await this.loadFromCache();
-          
-          // Initial fetch if we have keys
-          if (this.hasValidKeys && this.news.length === 0) {
-            await this.fetchNews();
-          }
-          
-          // Auto-refresh every 15 min
-          setInterval(() => this.fetchNews(), 15 * 60 * 1000);
+        init() {
+          this.loadKeys();
+          this.fetchNews();
+          setInterval(() => this.fetchNews(false), 300000); // Atualiza a cada 5 min
         },
-
-        // ================= API KEYS =================
-        saveKeys() {
-          if (!this.apiKeys.newsapi) {
-            this.showToast('Erro', 'NewsAPI Key é obrigatória', 'error');
-            return;
+        
+        loadKeys() {
+          const saved = localStorage.getItem('cryptoNewsKeys');
+          if (saved) {
+            this.apiKeys = JSON.parse(saved);
+            this.hasValidKeys = !!(this.apiKeys.newsapi || this.apiKeys.cryptopanic);
           }
-          localStorage.setItem('cn_api_keys', JSON.stringify(this.apiKeys));
+        },
+        
+        saveKeys() {
+          localStorage.setItem('cryptoNewsKeys', JSON.stringify(this.apiKeys));
           this.hasValidKeys = true;
-          this.showToast('Sucesso', 'Chaves salvas! Buscando notícias...', 'success');
           this.fetchNews();
         },
         
         useDemoMode() {
           this.hasValidKeys = true;
-          this.showToast('Modo Demo', 'Usando dados simulados. Adicione suas keys para dados reais.', 'info');
-          // Load demo data
-          this.news = this.generateDemoData();
-          this.processNews();
+          this.loadDemoData();
         },
-
-        toggleTheme() {
-          this.isDark = !this.isDark;
-          document.documentElement.classList.toggle('dark', this.isDark);
-          localStorage.setItem('theme', this.isDark ? 'dark' : 'light');
-        },
-
-        // ================= DATA FETCHING =================
-        async fetchNews(force = false) {
-          if (!this.hasValidKeys) return;
+        
+        loadDemoData() {
+          this.news = [
+            {
+              id: '1',
+              title: 'Bitcoin dispara acima de $73.000 após aprovação de ETF spot por BlackRock',
+              desc: 'Institucionais entram agressivamente no mercado enquanto Fed sinaliza pausa nos juros',
+              category: 'crypto',
+              source: 'CoinDesk',
+              date: new Date(Date.now() - 1800000).toISOString(),
+              url: '#',
+              image: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=400',
+              score: 32,
+              keywords: ['bitcoin', 'etf']
+            },
+            {
+              id: '2',
+              title: 'Fed mantém taxas de juros inalteradas; Powell cita inflação persistente',
+              desc: 'Mercados reagem com volatilidade às declarações do presidente do Federal Reserve',
+              category: 'macro',
+              source: 'Bloomberg',
+              date: new Date(Date.now() - 7200000).toISOString(),
+              url: '#',
+              image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400',
+              score: 15,
+              keywords: ['fed', 'juros']
+            },
+            {
+              id: '3',
+              title: 'SEC aprova novo framework regulatório para stablecoins nos EUA',
+              desc: 'Proposta visa trazer clareza jurídica para emissores de moedas digitais lastreadas',
+              category: 'politics',
+              source: 'Reuters',
+              date: new Date(Date.now() - 14400000).toISOString(),
+              url: '#',
+              image: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=400',
+              score: 18,
+              keywords: ['sec', 'regulacao']
+            },
+            {
+              id: '4',
+              title: 'Ethereum atinge novo recorde de transações diárias na camada 2',
+              desc: 'Arbitrum e Optimism lideram crescimento enquanto taxas na mainnet caem',
+              category: 'crypto',
+              source: 'The Block',
+              date: new Date(Date.now() - 3600000).toISOString(),
+              url: '#',
+              image: 'https://images.unsplash.com/photo-1622630998477-20aa696fa405?w=400',
+              score: 22,
+              keywords: ['ethereum', 'layer2']
+            },
+            {
+              id: '5',
+              title: 'Inflação nos EUA cai para 3.1% em novembro, abaixo do esperado',
+              desc: 'Dados reforçam expectativa de corte de juros pelo Fed em 2024',
+              category: 'macro',
+              source: 'WSJ',
+              date: new Date(Date.now() - 18000000).toISOString(),
+              url: '#',
+              image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400',
+              score: 13,
+              keywords: ['inflacao', 'economia']
+            }
+          ];
           
-          this.loading = true;
+          this.updateStats();
+          this.cacheInfo = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+        },
+        
+        async fetchNews(showLoading = true) {
+          if (showLoading) this.loading = true;
           this.error = null;
-          this.activeSources = [];
           
           try {
-            const results = await Promise.allSettled([
-              this.fetchFromNewsAPI(),
-              this.fetchFromCryptoPanic()
-            ]);
-            
-            let allNews = [];
-            
-            results.forEach((result, idx) => {
-              if (result.status === 'fulfilled' && result.value.length > 0) {
-                allNews = [...allNews, ...result.value];
-                this.activeSources.push(idx === 0 ? 'NewsAPI' : 'CryptoPanic');
-              }
-            });
-            
-            if (allNews.length === 0) {
-              throw new Error('Nenhuma notícia retornada pelas APIs');
+            if (this.apiKeys.newsapi) {
+              await this.fetchFromNewsAPI();
+            } else if (this.apiKeys.cryptopanic) {
+              await this.fetchFromCryptoPanic();
+            } else {
+              this.loadDemoData();
             }
-            
-            // Process pipeline
-            const deduped = this.deduplicate(allNews);
-            const scored = this.calculateScores(deduped);
-            const translated = await this.translateTopHeadlines(scored.slice(0, 15));
-            
-            this.news = [...translated, ...scored.slice(15)].sort((a, b) => b.score - a.score);
-            
-            // Update stats & cache
-            this.updateStats();
-            this.saveToCache();
-            this.updateCacheInfo();
-            
-            // Check for breaking news
-            this.detectBreakingNews();
-            
-            this.showToast('Atualizado', `${this.news.length} notícias carregadas`, 'success');
-            
           } catch (err) {
-            console.error('Fetch error:', err);
-            this.error = `Falha ao buscar: ${err.message}. ${this.news.length > 0 ? 'Usando cache.' : 'Verifique suas API keys.'}`;
-            if (this.news.length === 0) {
-              // Fallback to demo
-              this.news = this.generateDemoData();
-              this.processNews();
-            }
+            this.error = 'Erro ao buscar notícias: ' + err.message;
+            console.error(err);
           } finally {
             this.loading = false;
           }
         },
-
+        
         async fetchFromNewsAPI() {
-          if (!this.apiKeys.newsapi) return [];
+          const queries = ['bitcoin', 'cryptocurrency', 'federal reserve', 'ethereum'];
+          const allArticles = [];
           
-          const queries = [
-            'bitcoin OR ethereum OR crypto',
-            'fed OR "interest rate" OR inflation',
-            'sec OR "bitcoin etf" OR blackrock',
-            'trump OR biden economy'
-          ];
+          for (const q of queries) {
+            const url = `https://newsapi.org/v2/everything?q=${q}&language=en&sortBy=publishedAt&pageSize=5&apiKey=${this.apiKeys.newsapi}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.articles) {
+              allArticles.push(...data.articles.map((article, i) => ({
+                id: `${q}-${i}-${Date.now()}`,
+                title: article.title,
+                desc: article.description || '',
+                category: this.categorizeNews(q, article.title),
+                source: article.source.name,
+                date: article.publishedAt,
+                url: article.url,
+                image: article.urlToImage,
+                score: Math.floor(Math.random() * 30) + 5
+              })));
+            }
+          }
           
-          const results = await Promise.allSettled(
-            queries.map(q => 
-              fetch(`https://newsapi.org/v2/everything?q=${encodeURIComponent(q)}&language=en&sortBy=publishedAt&pageSize=15&apiKey=${this.apiKeys.newsapi}`)
-                .then(r => r.json())
-                .then(d => d.articles || [])
-            )
-          );
-          
-          return results
-            .filter(r => r.status === 'fulfilled')
-            .flatMap(r => r.value)
-            .map(article => ({
-              id: `na_${article.url}`,
-              title: article.title,
-              desc: article.description,
-              url: article.url,
-              image: article.urlToImage,
-              source: article.source?.name || 'NewsAPI',
-              date: article.publishedAt,
-              category: this.classifyCategory(article.title, article.description),
-              keywords: this.extractKeywords(article.title)
-            }));
+          this.news = allArticles.sort((a, b) => new Date(b.date) - new Date(a.date));
+          this.updateStats();
+          this.cacheInfo = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
         },
-
+        
         async fetchFromCryptoPanic() {
-          if (!this.apiKeys.cryptopanic) return [];
+          const url = `https://cryptopanic.com/api/v1/posts/?auth_token=${this.apiKeys.cryptopanic}&kind=news`;
+          const res = await fetch(url);
+          const data = await res.json();
           
-          try {
-            const res = await fetch(`https://cryptopanic.com/api/v1/posts/?auth_token=${this.apiKeys.cryptopanic}&public=true&kind=news`);
-            const data = await res.json();
-            
-            return (data.results || []).map(item => ({
-              id: `cp_${item.id}`,
-              title: item.title,
-              desc: item.body,
-              url: item.url,
-              image: item.image,
-              source: item.source?.title || 'CryptoPanic',
-              date: item.published_at,
-              category: 'crypto',
-              keywords: this.extractKeywords(item.title)
-            }));
-          } catch (e) {
-            console.error('CryptoPanic error:', e);
-            return [];
-          }
-        },
-
-        // ================= PROCESSING PIPELINE =================
-        deduplicate(articles) {
-          const seen = new Set();
-          return articles.filter(article => {
-            // Create dedup key from title (first 100 chars, lowercase, normalized)
-            const key = article.title.toLowerCase()
-              .replace(/[^\w\s]/g, '')
-              .split(/\s+/)
-              .slice(0, 15)
-              .join(' ');
-            
-            if (seen.has(key)) return false;
-            seen.add(key);
-            return true;
-          });
-        },
-
-        calculateScores(articles) {
-          return articles.map(article => {
-            let score = 0;
-            const t = article.title.toLowerCase();
-            const d = (article.desc || '').toLowerCase();
-            const text = `${t} ${d}`;
-            
-            // Entity scoring
-            if (/\b(bitcoin|btc)\b/.test(text)) score += 3;
-            if (/\b(ethereum|eth)\b/.test(text)) score += 2;
-            if (/\b(etf)\b/.test(text)) score += 5;
-            if (/\b(sec)\b/.test(text)) score += 4;
-            if (/\b(fed|federal reserve)\b/.test(text)) score += 5;
-            if (/\b(interest\s*rate|juros)\b/.test(text)) score += 4;
-            if (/\b(blackrock|fidelity|vanguard)\b/.test(text)) score += 6;
-            if (/\b(trump|biden)\b/.test(text)) score += 4;
-            if (/\b(hack|exploit|liquidation|crash)\b/.test(text)) score += 6;
-            if (/\b(all-time\s*high|record|surge|soar)\b/.test(text)) score += 4;
-            if (/\b(breaking|urgent|alert)\b/.test(t)) score += 5;
-            
-            // Source authority
-            const premiumSources = ['bloomberg', 'reuters', 'coindesk', 'the block', 'wsj'];
-            if (premiumSources.some(s => article.source.toLowerCase().includes(s))) score += 2;
-            
-            // Recency bonus
-            const hoursOld = (Date.now() - new Date(article.date).getTime()) / 36e5;
-            if (hoursOld < 1) score += 6;
-            else if (hoursOld < 3) score += 4;
-            else if (hoursOld < 6) score += 2;
-            else if (hoursOld < 12) score += 1;
-            
-            // Category weight
-            if (article.category === 'crypto') score += 1;
-            
-            return { ...article, score };
-          });
-        },
-
-        async translateTopHeadlines(articles) {
-          if (!this.apiKeys.gemini) return articles;
+          this.news = data.results.map((post, i) => ({
+            id: post.id || `cp-${i}`,
+            title: post.title,
+            desc: post.body || '',
+            category: this.categorizeNews(post.currencies?.[0]?.code || '', post.title),
+            source: post.source?.title || 'CryptoPanic',
+            date: post.published_at,
+            url: post.url,
+            image: post.image?.url || null,
+            score: post.votes || 0
+          }));
           
-          const toTranslate = articles.filter(a => {
-            // Skip if already Portuguese or very short
-            if (a.title.match(/[àáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿ]/i)) return false;
-            if (a.title.length < 20) return false;
-            return true;
-          });
-          
-          if (toTranslate.length === 0) return articles;
-          
-          try {
-            // Batch translate (max 10 at a time to avoid rate limits)
-            for (let i = 0; i < Math.min(toTranslate.length, 10); i += 5) {
-              const batch = toTranslate.slice(i, i + 5);
-              const prompts = batch.map(a => `Traduza para português do Brasil, mantendo termos técnicos em inglês: "${a.title}"`);
-              
-              const translations = await Promise.all(prompts.map(p => this.translateWithGemini(p)));
-              
-              batch.forEach((article, idx) => {
-                if (translations[idx] && translations[idx] !== article.title) {
-                  article.title = translations[idx];
-                  article.translated = true;
-                }
-              });
-              
-              // Small delay between batches
-              await new Promise(r => setTimeout(r, 500));
-            }
-          } catch (e) {
-            console.warn('Translation failed:', e);
-          }
-          
-          return articles;
+          this.updateStats();
         },
-
-        async translateWithGemini(prompt) {
-          try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${this.apiKeys.gemini}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-            });
-            const data = await res.json();
-            return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || prompt;
-          } catch {
-            return prompt;
-          }
+        
+        categorizeNews(keyword, title) {
+          const text = (keyword + ' ' + title).toLowerCase();
+          if (text.match(/bitcoin|ethereum|crypto|altcoin|defi|nft/)) return 'crypto';
+          if (text.match(/fed|inflation|interest|rate|economy|gdp/)) return 'macro';
+          if (text.match(/sec|regulation|government|policy|law/)) return 'politics';
+          return 'crypto';
         },
-
-        classifyCategory(title, desc) {
-          const text = `${title} ${desc || ''}`.toLowerCase();
-          
-          if (/\b(bitcoin|ethereum|crypto|blockchain|defi|nft|altcoin|binance|coinbase)\b/.test(text)) {
-            return 'crypto';
-          }
-          if (/\b(fed|interest\s*rate|inflation|gdp|unemployment|jerome\spowell|ecb|bcb)\b/.test(text)) {
-            return 'macro';
-          }
-          if (/\b(trump|biden|congress|senate|white\s*house|regulation|sec|cftc)\b/.test(text)) {
-            return 'politics';
-          }
-          return 'macro'; // default
-        },
-
-        extractKeywords(title) {
-          const keywords = [];
-          const t = title.toLowerCase();
-          
-          ['bitcoin', 'ethereum', 'btc', 'eth', 'fed', 'etf', 'sec', 'blackrock', 'trump', 'biden', 'inflation']
-            .forEach(kw => { if (t.includes(kw)) keywords.push(kw); });
-          
-          return keywords.slice(0, 3);
-        },
-
-        // ================= CACHE =================
-        async loadFromCache() {
-          try {
-            const cached = localStorage.getItem('cn_news_cache');
-            const meta = localStorage.getItem('cn_cache_meta');
-            
-            if (cached && meta) {
-              const { timestamp, expiry } = JSON.parse(meta);
-              const now = Date.now();
-              
-              if (now < expiry) {
-                this.news = JSON.parse(cached);
-                this.cacheInfo = 'Válido';
-                this.cacheExpiry = new Date(expiry).toLocaleTimeString('pt-BR');
-                this.lastSync = new Date(timestamp).toLocaleTimeString('pt-BR');
-                this.updateStats();
-                this.processNews();
-                return true;
-              }
-            }
-          } catch (e) {
-            console.warn('Cache load error:', e);
-          }
-          return false;
-        },
-
-        saveToCache() {
-          try {
-            const now = Date.now();
-            const expiry = now + 15 * 60 * 1000; // 15 minutes
-            
-            localStorage.setItem('cn_news_cache', JSON.stringify(this.news));
-            localStorage.setItem('cn_cache_meta', JSON.stringify({
-              timestamp: now,
-              expiry: expiry,
-              count: this.news.length
-            }));
-            
-            this.updateCacheInfo();
-          } catch (e) {
-            console.warn('Cache save error:', e);
-          }
-        },
-
-        updateCacheInfo() {
-          const meta = localStorage.getItem('cn_cache_meta');
-          if (meta) {
-            const { timestamp, expiry } = JSON.parse(meta);
-            this.cacheExpiry = new Date(expiry).toLocaleTimeString('pt-BR');
-            this.lastSync = new Date(timestamp).toLocaleTimeString('pt-BR');
-            const minsLeft = Math.max(0, Math.round((expiry - Date.now()) / 60000));
-            this.cacheInfo = minsLeft > 0 ? `${minsLeft}min` : 'Expirado';
-          }
-        },
-
-        // ================= STATS & BREAKING =================
+        
         updateStats() {
           const now = Date.now();
-          const last24h = now - 24 * 60 * 60 * 1000;
-          this.stats.total24h = this.news.filter(n => new Date(n.date).getTime() > last24h).length;
+          const day = 24 * 60 * 60 * 1000;
+          this.stats.total24h = this.news.filter(n => (now - new Date(n.date).getTime()) < day).length;
           
-          // Update category counts
           this.categories.forEach(cat => {
-            if (cat.id === 'all') {
-              cat.count = this.news.length;
-            } else {
+            if (cat.id !== 'all') {
               cat.count = this.news.filter(n => n.category === cat.id).length;
+            } else {
+              cat.count = this.news.length;
             }
           });
         },
-
-        detectBreakingNews() {
-          // Look for urgent/breaking keywords in recent high-score news
-          const recent = this.news.filter(n => {
-            const hours = (Date.now() - new Date(n.date).getTime()) / 36e5;
-            return hours < 2 && n.score >= 12;
-          });
-          
-          const breaking = recent.find(n => 
-            /\b(breaking|urgent|alert|emergency|major|crash|surge)\b/i.test(n.title)
-          );
-          
-          if (breaking) {
-            this.breakingNews = `🚨 ${breaking.title}`;
-            // Auto-clear after 10 seconds
-            setTimeout(() => { if (this.breakingNews?.includes(breaking.title)) this.breakingNews = null; }, 10000);
-          }
-        },
-
-        // ================= COMPUTED PROPERTIES =================
+        
         get filteredNews() {
-          let result = this.news;
+          let filtered = this.news;
           
-          // Category filter
           if (this.filters.category !== 'all') {
-            result = result.filter(n => n.category === this.filters.category);
+            filtered = filtered.filter(n => n.category === this.filters.category);
           }
           
-          // Search filter
           if (this.filters.search) {
-            const q = this.filters.search.toLowerCase();
-            result = result.filter(n => 
-              n.title.toLowerCase().includes(q) || 
-              (n.desc?.toLowerCase().includes(q)) ||
-              n.keywords?.some(k => k.includes(q))
+            const s = this.filters.search.toLowerCase();
+            filtered = filtered.filter(n => 
+              n.title.toLowerCase().includes(s) || 
+              (n.desc && n.desc.toLowerCase().includes(s))
             );
           }
           
-          return result;
+          return filtered;
         },
-
+        
         get paginatedNews() {
           const start = (this.currentPage - 1) * this.itemsPerPage;
           return this.filteredNews.slice(start, start + this.itemsPerPage);
         },
-
-        get totalPages() {
-          return Math.ceil(this.filteredNews.length / this.itemsPerPage) || 1;
-        },
-
+        
         get trending() {
-          return this.news.filter(n => n.score >= 12).slice(0, 3);
+          return [...this.news]
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 3);
         },
-
-        get groupedHeadlines() {
-          const groups = {};
-          ['crypto', 'macro', 'politics'].forEach(cat => {
-            const items = this.news
-              .filter(n => n.category === cat)
-              .slice(0, 8)
-              .map(n => ({ ...n, title: n.title.replace(/\s+/g, ' ').trim() }));
-            
-            if (items.length > 0) {
-              const config = this.categories.find(c => c.id === cat);
-              groups[cat] = {
-                cat,
-                label: config?.label || cat,
-                icon: config?.icon || '',
-                items
-              };
+        
+        get totalPages() {
+          return Math.ceil(this.filteredNews.length / this.itemsPerPage);
+        },
+        
+        getPages() {
+          const pages = [];
+          const total = this.totalPages;
+          const current = this.currentPage;
+          
+          for (let i = 1; i <= total; i++) {
+            if (i === 1 || i === total || (i >= current - 1 && i <= current + 1)) {
+              pages.push(i);
+            } else if (pages[pages.length - 1] !== '...') {
+              pages.push('...');
             }
-          });
-          return Object.values(groups);
+          }
+          
+          return pages;
         },
-
-        // ================= ACTIONS =================
-        async refreshNews(force = false) {
-          if (this.loading) return;
-          await this.fetchNews(force);
+        
+        getCategoryLabel(cat) {
+          const c = this.categories.find(c => c.id === cat);
+          return c ? c.label : 'Todas';
         },
-
-        retryFetch() {
-          this.fetchNews(true);
+        
+        getDefaultImage(category) {
+          const images = {
+            crypto: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=400',
+            macro: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400',
+            politics: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=400'
+          };
+          return images[category] || images.crypto;
         },
-
+        
+        timeAgo(dateString) {
+          const date = new Date(dateString);
+          const now = new Date();
+          const diff = (now - date) / 1000;
+          
+          if (diff < 60) return 'Agora';
+          if (diff < 3600) return `${Math.floor(diff/60)}min`;
+          if (diff < 86400) return `${Math.floor(diff/3600)}h`;
+          return `${Math.floor(diff/86400)}d`;
+        },
+        
         searchNews() {
-          if (!this.filters.search || this.filters.search.length < 3) {
+          if (this.filters.search.length < 3) {
             this.searchResults = [];
             return;
           }
-          const q = this.filters.search.toLowerCase();
+          
+          const s = this.filters.search.toLowerCase();
           this.searchResults = this.news.filter(n => 
-            n.title.toLowerCase().includes(q) || 
-            n.desc?.toLowerCase().includes(q) ||
-            n.keywords?.some(k => k.includes(q))
-          ).slice(0, 20);
+            n.title.toLowerCase().includes(s) || 
+            (n.desc && n.desc.toLowerCase().includes(s))
+          );
         },
-
-        processNews() {
-          // Re-process for demo data
-          this.news = this.calculateScores(this.deduplicate(this.news));
-          this.updateStats();
-          this.updateCacheInfo();
+        
+        refreshNews(force = false) {
+          this.currentPage = 1;
+          this.fetchNews(force);
         },
-
-        // ================= COPY/EXPORT =================
-        copySingle(text) {
-          navigator.clipboard.writeText(text.trim());
-          this.showToast('Copiado', 'Manchete copiada para área de transferência', 'success');
+        
+        retryFetch() {
+          this.fetchNews(true);
         },
-
-        copyAll(type = 'titles') {
-          const items = this.news.slice(0, 30);
-          
-          if (type === 'titles') {
-            const text = items.map((n, i) => `${i+1}. ${n.title}`).join('\n');
-            navigator.clipboard.writeText(text);
-            this.showToast('Copiado', `${items.length} títulos copiados`, 'success');
-          }
-          else if (type === 'prompts') {
-            const crypto = items.filter(n => n.category === 'crypto').slice(0, 5);
-            const macro = items.filter(n => n.category === 'macro').slice(0, 5);
-            
-            const prompt = `🚨 BREAKING NEWS - MERCADO FINANCEIRO
-
-🟡 CRIPTO:
-${crypto.map(n => `• ${n.title}`).join('\n') || '• Sem notícias no momento'}
-
-🔵 MACROECONOMIA:
-${macro.map(n => `• ${n.title}`).join('\n') || '• Sem notícias no momento'}
-
-🎨 Estilo: Design moderno financeiro, cores escuras (preto/azul/roxo), tipografia bold, visual profissional tipo Bloomberg/CNBC, destaque para Bitcoin e mercados globais, composição dinâmica com elementos de gráfico e moedas.`;
-            
-            navigator.clipboard.writeText(prompt);
-            this.showToast('Prompt gerado', 'Copiado! Cole no Midjourney, DALL-E ou ChatGPT', 'success');
-          }
-          else if (type === 'json') {
-            const json = JSON.stringify(items.map(n => ({
-              title: n.title,
-              url: n.url,
-              source: n.source,
-              category: n.category,
-              score: n.score,
-              date: n.date
-            })), null, 2);
-            navigator.clipboard.writeText(json);
-            this.showToast('JSON copiado', 'Estrutura pronta para integração', 'success');
-          }
+        
+        toggleTheme() {
+          this.isDark = !this.isDark;
+          document.documentElement.classList.toggle('dark');
         },
-
-        copyGroup(items) {
-          const text = items.map((n, i) => `${i+1}. ${n.title}`).join('\n');
+        
+        copyHeadlines() {
+          const text = this.news.slice(0, 20).map(n => n.title).join('\n');
           navigator.clipboard.writeText(text);
-          this.showToast('Copiado', `${items.length} manchetes do grupo`, 'success');
-        },
-
-        exportCSV() {
-          const headers = ['Título', 'URL', 'Fonte', 'Categoria', 'Score', 'Data'];
-          const rows = this.news.slice(0, 50).map(n => [
-            `"${n.title.replace(/"/g, '""')}"`,
-            n.url,
-            n.source,
-            n.category,
-            n.score,
-            new Date(n.date).toISOString()
-          ]);
-          
-          const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-          const blob = new Blob([csv], { type: 'text/csv' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `cryptonews-${Date.now()}.csv`;
-          a.click();
-          URL.revokeObjectURL(url);
-          this.showToast('Exportado', 'Arquivo CSV baixado', 'success');
-        },
-
-        // ================= HELPERS =================
-        timeAgo(dateStr) {
-          const date = new Date(dateStr);
-          const now = new Date();
-          const seconds = Math.floor((now - date) / 1000);
-          
-          if (seconds < 60) return 'Agora';
-          const minutes = Math.floor(seconds / 60);
-          if (minutes < 60) return `${minutes}min`;
-          const hours = Math.floor(minutes / 60);
-          if (hours < 24) return `${hours}h`;
-          const days = Math.floor(hours / 24);
-          return `${days}d`;
-        },
-
-        getCategoryLabel(id) {
-          const cat = this.categories.find(c => c.id === id);
-          return cat ? `${cat.icon} ${cat.label}` : 'Notícias';
-        },
-
-        getDefaultImage(category) {
-          const colors = { crypto: 'fbbf24', macro: '3b82f6', politics: 'ef4444' };
-          const labels = { crypto: 'CRYPTO', macro: 'MACRO', politics: 'POLITICS' };
-          return `https://placehold.co/400x300/1f2937/${colors[category] || '6b7280'}?text=${labels[category] || 'NEWS'}&font=roboto`;
-        },
-
-        getPages() {
-          const pages = [];
-          const max = 5;
-          let start = Math.max(1, this.currentPage - Math.floor(max/2));
-          let end = Math.min(this.totalPages, start + max - 1);
-          
-          if (end - start < max - 1) {
-            start = Math.max(1, end - max + 1);
-          }
-          
-          for (let i = start; i <= end; i++) pages.push(i);
-          return pages;
-        },
-
-        showToast(title, message, type = 'info') {
-          this.toast = { visible: true, title, message, type };
-          setTimeout(() => this.toast.visible = false, 4000);
-        },
-
-        // ================= DEMO DATA =================
-        generateDemoData() {
-          const now = new Date();
-          const demo = [
-            { title: "Bitcoin dispara acima de $73.000 após aprovação de ETF spot por BlackRock", desc: "Institucionais entram agressivamente no mercado enquanto Fed sinaliza pausa nos juros", source: "CoinDesk", category: "crypto", date: new Date(now - 30*60*1000).toISOString(), score: 18, keywords: ['bitcoin', 'etf', 'blackrock'] },
-            { title: "Fed mantém taxas de juros inalteradas; Powell cita inflação persistente", desc: "Mercados reagem com volatilidade às declarações do presidente do Federal Reserve", source: "Bloomberg", category: "macro", date: new Date(now - 2*60*60*1000).toISOString(), score: 16, keywords: ['fed', 'interest rate'] },
-            { title: "SEC aprova novo framework regulatório para stablecoins nos EUA", desc: "Proposta visa trazer clareza jurídica para emissores de moedas digitais lastreadas", source: "Reuters", category: "politics", date: new Date(now - 4*60*60*1000).toISOString(), score: 14, keywords: ['sec', 'regulation'] },
-            { title: "Ethereum atinge novo recorde de transações diárias na camada 2", desc: "Arbitrum e Optimism lideram crescimento enquanto taxas na mainnet caem", source: "The Block", category: "crypto", date: new Date(now - 1*60*60*1000).toISOString(), score: 12, keywords: ['ethereum', 'layer2'] },
-            { title: "Trump propõe criação de reserva estratégica de Bitcoin em campanha", desc: "Ex-presidente defende adoção de criptoativos como política de estado", source: "CNBC", category: "politics", date: new Date(now - 5*60*60*1000).toISOString(), score: 13, keywords: ['trump', 'bitcoin'] },
-            { title: "Inflação nos EUA cai para 3.1% em novembro, abaixo do esperado", desc: "Dados reforçam expectativa de corte de juros pelo Fed em 2024", source: "WSJ", category: "macro", date: new Date(now - 3*60*60*1000).toISOString(), score: 11, keywords: ['inflation', 'fed'] },
-            { title: "Binance concorda em pagar multa de $4.3 bi para encerrar investigação nos EUA", desc: "Acordo histórico marca nova era de compliance no setor de criptoativos", source: "Decrypt", category: "crypto", date: new Date(now - 6*60*60*1000).toISOString(), score: 15, keywords: ['binance', 'sec'] },
-            { title: "Banco Central Europeu avança com testes do euro digital em 2024", desc: "ECB planeja fase piloto com instituições financeiras selecionadas", source: "Financial Times", category: "macro", date: new Date(now - 8*60*60*1000).toISOString(), score: 9, keywords: ['ecb', 'cbdc'] },
-            { title: "Hack em ponte DeFi resulta em perda de $80 milhões em ETH", desc: "Equipe de segurança identifica vulnerabilidade em contrato inteligente", source: "CryptoPanic", category: "crypto", date: new Date(now - 45*60*1000).toISOString(), score: 17, keywords: ['hack', 'defi', 'ethereum'] },
-            { title: "Congresso dos EUA debate projeto de lei para regulamentação de criptoativos", desc: "Proposta busca equilibrar inovação e proteção ao investidor", source: "Politico", category: "politics", date: new Date(now - 10*60*60*1000).toISOString(), score: 10, keywords: ['congress', 'regulation'] }
-          ];
-          
-          return demo.map((d, i) => ({
-            id: `demo_${i}`,
-            url: '#',
-            image: null,
-            translated: false,
-            ...d
-          }));
+          alert('Manchetes copiadas!');
         }
-      };
+      }
     }
   </script>
 </body>
